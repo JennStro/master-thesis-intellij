@@ -115,12 +115,12 @@ public class Analyser {
             }
             boolean hasError = Arrays.equals(dangerPattern, actualPattern);
             if (hasError) {
-                return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber);
+                return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.SEMICOLON_AFTER_IF);
             }
             if (token.equals("\n")) {
                 lineNumber += 1;
             }
         }
-        return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber);
+        return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.SEMICOLON_AFTER_IF);
     }
 }

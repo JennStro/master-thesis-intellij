@@ -2,8 +2,9 @@ public class MaybeError {
 
     private boolean hasError;
     private int lineNumber;
+    private ErrorType errorType;
 
-    public boolean isHasError() {
+    public boolean isError() {
         return hasError;
     }
 
@@ -19,6 +20,14 @@ public class MaybeError {
         this.lineNumber = lineNumber;
     }
 
+    public ErrorType getErrorType() {
+        return errorType;
+    }
+
+    public void setErrorType(ErrorType errorType) {
+        this.errorType = errorType;
+    }
+
     public MaybeError error(boolean hasError) {
         this.hasError = hasError;
         return this;
@@ -26,6 +35,11 @@ public class MaybeError {
 
     public MaybeError onLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
+        return this;
+    }
+
+    public MaybeError type(ErrorType errorType) {
+        this.errorType = errorType;
         return this;
     }
 

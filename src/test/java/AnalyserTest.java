@@ -66,19 +66,19 @@ public class AnalyserTest {
     @Test
     public void shouldFindSemicolonAfterIf() {
         String codeWithError = "if(true);";
-        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isHasError());
+        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isError());
     }
 
     @Test
     public void shouldFindSemiColorAfterIfNestedParanthesis() {
         String codeWithError = "if((true && false) || true);";
-        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isHasError());
+        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isError());
     }
 
     @Test
     public void shouldNotFindSemicolonAfterIf() {
         String codeWithNoError = "if((true && false) || true)";
-        Assertions.assertFalse(analyser.hasSemicolonAfterIf(codeWithNoError).isHasError());
+        Assertions.assertFalse(analyser.hasSemicolonAfterIf(codeWithNoError).isError());
     }
 
     @Test

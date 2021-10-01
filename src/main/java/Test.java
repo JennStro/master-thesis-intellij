@@ -2,7 +2,6 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.colors.EditorFontType;
 import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.TextAttributes;
@@ -64,7 +63,7 @@ public class Test extends AnAction {
                 System.out.println(file.getContent());
                 System.out.println(analyser.getTokens(file.getContent()));
                 MaybeError maybeError = analyser.hasSemicolonAfterIf(file.getContent());
-                if (maybeError.isHasError()) {
+                if (maybeError.isError()) {
                     Messages.showMessageDialog(project, "OPS: found error on line " + maybeError.getLineNumber(), "An error", Messages.getInformationIcon());
                     Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     editor.getMarkupModel().addLineHighlighter(maybeError.getLineNumber() - 1, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW, JBColor.RED, EffectType.BOLD_LINE_UNDERSCORE, 1));
