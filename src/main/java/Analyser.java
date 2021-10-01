@@ -2,6 +2,7 @@ import com.jetbrains.rd.util.Maybe;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Stack;
 
 public class Analyser {
 
@@ -94,9 +95,15 @@ public class Analyser {
         ArrayList<String> tokens = getTokens(fileContents);
         String[] dangerPattern = new String[]{"if", "(", ")", ";"};
         String[] actualPattern = new String[4];
+        Stack<String> paranthesis = new Stack<>();
         int matchedToken = 0;
         int lineNumber = 1;
-        for (String token : tokens) {
+        for (int i = 0; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+            String predecessor = "";
+            if (i > 0) {
+                predecessor = tokens.get(i-1);
+            }
             if (token.equals("if")) {
                 actualPattern[matchedToken] = token;
                 matchedToken += 1;
@@ -104,12 +111,20 @@ public class Analyser {
             if (token.equals("(") && matchedToken == 1) {
                 actualPattern[matchedToken] = token;
                 matchedToken += 1;
+                paranthesis.push(token);
+            }
+            if (token.equals("(") && matchedToken > 1) {
+                paranthesis.push(token);
             }
             if (token.equals(")") && matchedToken == 2) {
                 actualPattern[matchedToken] = token;
                 matchedToken += 1;
+                paranthesis.pop();
             }
-            if (token.equals(";") && matchedToken == 3) {
+            if (token.equals(")") && matchedToken > 2) {
+                paranthesis.pop();
+            }
+            if (token.equals(";") && matchedToken == 3 && paranthesis.empty() && predecessor.equals(")")) {
                 actualPattern[matchedToken] = token;
                 matchedToken += 1;
             }
@@ -122,5 +137,39 @@ public class Analyser {
             }
         }
         return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.SEMICOLON_AFTER_IF);
+    }
+
+    public MaybeError usesBitwiseOperator(String fileContents) {
+        ArrayList<String> tokens = getTokens(fileContents);
+        String[] dangerPattern = new String[]{"if", "(", "&", ")"};
+        String[] actualPattern = new String[4];
+        int matchedToken = 0;
+        int lineNumber = 1;
+        for (String token : tokens) {
+            if (token.equals("if")) {
+                actualPattern[matchedToken] = token;
+                matchedToken += 1;
+            }
+            if (token.equals("(") && matchedToken == 1) {
+                actualPattern[matchedToken] = token;
+                matchedToken += 1;
+            }
+            if (token.equals("&") && matchedToken == 2) {
+                actualPattern[matchedToken] = token;
+                matchedToken += 1;
+            }
+            if (token.equals(")") && matchedToken == 3) {
+                actualPattern[matchedToken] = token;
+                matchedToken += 1;
+            }
+            boolean hasError = Arrays.equals(dangerPattern, actualPattern);
+            if (hasError) {
+                return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.BITWISE_OPERATOR);
+            }
+            if (token.equals("\n")) {
+                lineNumber += 1;
+            }
+        }
+        return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.BITWISE_OPERATOR);
     }
 }

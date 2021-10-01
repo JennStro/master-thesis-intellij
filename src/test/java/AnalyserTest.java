@@ -76,6 +76,12 @@ public class AnalyserTest {
     }
 
     @Test
+    public void shouldNotFindSemicolonErrorIfNone() {
+        String codeWithNoError = "if(true){ int b = 5; }";
+        Assertions.assertFalse(analyser.hasSemicolonAfterIf(codeWithNoError).isError());
+    }
+
+    @Test
     public void shouldNotFindSemicolonAfterIf() {
         String codeWithNoError = "if((true && false) || true)";
         Assertions.assertFalse(analyser.hasSemicolonAfterIf(codeWithNoError).isError());
@@ -91,5 +97,23 @@ public class AnalyserTest {
     public void shouldFindErrorOnLineThreeNotLastLine() {
         String codeWithError = "\n \n if(true); \n";
         Assertions.assertEquals(3, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
+    }
+
+    @Test
+    public void bitwiseAndOperator() {
+        ArrayList<String> expectedTokens = new ArrayList<>(Arrays.asList("if", "(", "true", "&", "false", ")"));
+        Assertions.assertEquals(expectedTokens, this.analyser.getTokens("if(true & false)"));
+    }
+
+    @Test
+    public void bitwiseOrOperator() {
+        ArrayList<String> expectedTokens = new ArrayList<>(Arrays.asList("if", "(", "true", "|", "false", ")"));
+        Assertions.assertEquals(expectedTokens, this.analyser.getTokens("if(true | false)"));
+    }
+
+    @Test
+    public void usesBitwiseAndOperatorBug() {
+        String errorString = "if(true & false)";
+        Assertions.assertTrue(this.analyser.usesBitwiseOperator(errorString).isError());
     }
 }
