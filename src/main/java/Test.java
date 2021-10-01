@@ -49,10 +49,12 @@ public class Test extends AnAction {
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
         ArrayList<SelectedFile> files = getFiles(project);
+        Analyser analyser = new Analyser();
 
         for (SelectedFile file : files) {
             System.out.println(file.getName());
             System.out.println(file.getContent());
+            System.out.println(analyser.getTokens(file.getContent()));
         }
     }
 }

@@ -12,6 +12,9 @@ public class Analyser {
         if (fileContent.length() == 0) {
             return previousTokens;
         }
+        if (fileContent.charAt(0) == '\n') {
+            return getTokens(fileContent.substring(1), previousTokens);
+        }
         if (fileContent.charAt(0) == ' ') {
             return getTokens(fileContent.substring(1), previousTokens);
         }
@@ -24,6 +27,10 @@ public class Analyser {
             return getTokens(fileContent.substring(1), previousTokens);
         }
         if (fileContent.charAt(0) == '{' || fileContent.charAt(0) == '}') {
+            previousTokens.add(Character.toString(fileContent.charAt(0)));
+            return getTokens(fileContent.substring(1), previousTokens);
+        }
+        if (fileContent.charAt(0) == '[' || fileContent.charAt(0) == ']') {
             previousTokens.add(Character.toString(fileContent.charAt(0)));
             return getTokens(fileContent.substring(1), previousTokens);
         }
@@ -55,6 +62,7 @@ public class Analyser {
         return getTokens(fileContent.substring(i), previousTokens);
     }
 
-
-
+    public boolean hasError(String fileContents) {
+        return false;
+    }
 }
