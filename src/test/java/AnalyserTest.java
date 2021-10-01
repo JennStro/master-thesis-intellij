@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.BeforeAll;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
@@ -61,5 +61,35 @@ public class AnalyserTest {
     public void methodCall() {
         ArrayList<String> expectedTokens = new ArrayList<>(Arrays.asList("something", ".", "toString", "(", ")", ";"));
         Assertions.assertEquals(expectedTokens, this.analyser.getTokens("something.toString();"));
+    }
+
+    @Test
+    public void shouldFindSemicolonAfterIf() {
+        String codeWithError = "if(true);";
+        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isHasError());
+    }
+
+    @Test
+    public void shouldFindSemiColorAfterIfNestedParanthesis() {
+        String codeWithError = "if((true && false) || true);";
+        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isHasError());
+    }
+
+    @Test
+    public void shouldNotFindSemicolonAfterIf() {
+        String codeWithNoError = "if((true && false) || true)";
+        Assertions.assertFalse(analyser.hasSemicolonAfterIf(codeWithNoError).isHasError());
+    }
+
+    @Test
+    public void shouldFindErrorOnLineThree() {
+        String codeWithError = "\n \n if(true);";
+        Assertions.assertEquals(3, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
+    }
+
+    @Test
+    public void shouldFindErrorOnLineThreeNotLastLine() {
+        String codeWithError = "\n \n if(true); \n";
+        Assertions.assertEquals(3, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
     }
 }

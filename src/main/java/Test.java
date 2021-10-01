@@ -3,6 +3,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,6 +56,10 @@ public class Test extends AnAction {
             System.out.println(file.getName());
             System.out.println(file.getContent());
             System.out.println(analyser.getTokens(file.getContent()));
+            MaybeError maybeError = analyser.hasSemicolonAfterIf(file.getContent());
+            if (maybeError.isHasError()) {
+                Messages.showMessageDialog(project, "OPS: found error on line " + maybeError.getLineNumber(), "An error", Messages.getInformationIcon());
+            }
         }
     }
 }
