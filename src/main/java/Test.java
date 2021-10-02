@@ -1,7 +1,7 @@
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
-import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.*;
 import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.TextAttributes;
@@ -12,8 +12,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.JBColor;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class Test extends AnAction {
 
@@ -62,11 +64,16 @@ public class Test extends AnAction {
                 System.out.println(file.getName());
                 System.out.println(file.getContent());
                 System.out.println(analyser.getTokens(file.getContent()));
-                MaybeError maybeError = analyser.hasSemicolonAfterIf(file.getContent());
-                if (maybeError.isError()) {
-                    Messages.showMessageDialog(project, "OPS: found error on line " + maybeError.getLineNumber(), "An error", Messages.getInformationIcon());
+                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(file.getContent()).stream().filter(MaybeError::isError).collect(Collectors.toCollection(ArrayList::new));
+                for (MaybeError error : errors) {
+                    Messages.showMessageDialog(project, "OPS: found error on line " + error.getLineNumber(), "An error: " + error.getErrorType(), Messages.getInformationIcon());
+
                     Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                    editor.getMarkupModel().addLineHighlighter(maybeError.getLineNumber() - 1, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW, JBColor.RED, EffectType.BOLD_LINE_UNDERSCORE, 1));
+                    CaretModel caretModel = editor.getCaretModel();
+                    caretModel.moveToLogicalPosition(new LogicalPosition(error.getLineNumber()-2, 0));
+                    ScrollingModel scrollingModel = editor.getScrollingModel();
+                    scrollingModel.scrollToCaret(ScrollType.CENTER);
+                    editor.getMarkupModel().addLineHighlighter(error.getLineNumber() - 1, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
                 }
             }
         }

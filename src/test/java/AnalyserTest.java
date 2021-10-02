@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class AnalyserTest {
 
@@ -115,5 +116,50 @@ public class AnalyserTest {
     public void usesBitwiseAndOperatorBug() {
         String errorString = "if(true & false)";
         Assertions.assertTrue(this.analyser.usesBitwiseOperator(errorString).isError());
+    }
+
+    @Test
+    public void usesAndOperator() {
+        String errorString = "if(true && false)";
+        Assertions.assertFalse(this.analyser.usesBitwiseOperator(errorString).isError());
+    }
+
+    @Test
+    public void notMatchingParanthesisGivesNoError() {
+        String errorString = "if((true && false)";
+        Assertions.assertFalse(this.analyser.usesBitwiseOperator(errorString).isError());
+    }
+
+    @Test
+    public void shouldGetListOfErrorsButOnlyHaseSemicolonError() {
+        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf("if(true && false); {}");
+        HashMap<ErrorType, Boolean> hasErrorOfTypeOf = new HashMap<>();
+        for (MaybeError error : errors) {
+            hasErrorOfTypeOf.put(error.getErrorType(), error.isError());
+        }
+        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.SEMICOLON_AFTER_IF));
+        Assertions.assertFalse(hasErrorOfTypeOf.get(ErrorType.BITWISE_OPERATOR));
+    }
+
+    @Test
+    public void shouldOnlyGetBitwiseOperatorError() {
+        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf("if(true & false) {}");
+        HashMap<ErrorType, Boolean> hasErrorOfTypeOf = new HashMap<>();
+        for (MaybeError error : errors) {
+            hasErrorOfTypeOf.put(error.getErrorType(), error.isError());
+        }
+        Assertions.assertFalse(hasErrorOfTypeOf.get(ErrorType.SEMICOLON_AFTER_IF));
+        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.BITWISE_OPERATOR));
+    }
+
+    @Test
+    public void shouldHaveBothSemicolonAndBitwiseOperatorError() {
+        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf("if(true & false); {}");
+        HashMap<ErrorType, Boolean> hasErrorOfTypeOf = new HashMap<>();
+        for (MaybeError error : errors) {
+            hasErrorOfTypeOf.put(error.getErrorType(), error.isError());
+        }
+        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.SEMICOLON_AFTER_IF));
+        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.BITWISE_OPERATOR));
     }
 }

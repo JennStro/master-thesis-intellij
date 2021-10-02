@@ -172,4 +172,11 @@ public class Analyser {
         }
         return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.BITWISE_OPERATOR);
     }
+
+    public ArrayList<MaybeError> getPossibleErrorsOf(String fileContents) {
+        ArrayList<MaybeError> errors = new ArrayList<>();
+        errors.add(hasSemicolonAfterIf(fileContents));
+        errors.add(usesBitwiseOperator(fileContents));
+        return errors;
+    }
 }
