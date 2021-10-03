@@ -2,7 +2,6 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.*;
-import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -64,15 +63,18 @@ public class Test extends AnAction {
                 System.out.println(file.getName());
                 System.out.println(file.getContent());
                 System.out.println(analyser.getTokens(file.getContent()));
-                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(file.getContent()).stream().filter(MaybeError::isError).collect(Collectors.toCollection(ArrayList::new));
+                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(file.getContent())
+                        .stream().filter(MaybeError::isError)
+                        .collect(Collectors.toCollection(ArrayList::new));
                 for (MaybeError error : errors) {
                     Messages.showMessageDialog(project, "OPS: found error on line " + error.getLineNumber(), "An error: " + error.getErrorType(), Messages.getInformationIcon());
 
                     Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     CaretModel caretModel = editor.getCaretModel();
-                    caretModel.moveToLogicalPosition(new LogicalPosition(error.getLineNumber()-2, 0));
+                    caretModel.moveToLogicalPosition(new LogicalPosition(error.getLineNumber()-1, 0));
                     ScrollingModel scrollingModel = editor.getScrollingModel();
                     scrollingModel.scrollToCaret(ScrollType.CENTER);
+                    editor.getSelectionModel().selectLineAtCaret();
                     editor.getMarkupModel().addLineHighlighter(error.getLineNumber() - 1, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
                 }
             }
