@@ -1,4 +1,5 @@
-import com.jetbrains.rd.util.Maybe;
+import Statements.IfStatement;
+import Statements.Node;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -178,5 +179,33 @@ public class Analyser {
         errors.add(hasSemicolonAfterIf(fileContents));
         errors.add(usesBitwiseOperator(fileContents));
         return errors;
+    }
+
+    public ArrayList<Node> getParseTree(String program) {
+        ArrayList<String> tokens = getTokens(program);
+        ArrayList<Node> tree = new ArrayList<>();
+
+        int i = 0;
+        while (tokens.size() >0) {
+            if (tokens.get(i).equals("if")) {
+                StringBuilder conditionalExpression = new StringBuilder();
+                Stack<String> paranthesis = new Stack<>();
+
+                if (tokens.get(i+1).equals("(")) {
+                    paranthesis.push("(");
+                    i +=1;
+                } else if (tokens.get(i+1).equals(")")) {
+                    paranthesis.pop();
+                    i +=1;
+                }
+                if (!paranthesis.empty()) {
+                    conditionalExpression.append(tokens.get(i+1));
+                }
+
+                tree.add(new IfStatement(new ArrayList<>(), conditionalExpression.toString()));
+                return tree;
+            }
+        }
+        return tree;
     }
 }

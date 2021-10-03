@@ -1,4 +1,6 @@
 
+import Statements.IfStatement;
+import Statements.Node;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
@@ -161,5 +163,13 @@ public class AnalyserTest {
         }
         Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.SEMICOLON_AFTER_IF));
         Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.BITWISE_OPERATOR));
+    }
+
+    @Test
+    public void ifStatementWithBody() {
+        String program = "if(true) {int a = 5;}";
+        ArrayList<Node> parsedProgram = analyser.getParseTree(program);
+        Assertions.assertTrue(parsedProgram.get(0) instanceof IfStatement);
+        Assertions.assertEquals(parsedProgram.get(0).getExpression(), "true");
     }
 }
