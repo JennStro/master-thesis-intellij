@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-public class Test extends AnAction {
+public class Main extends AnAction {
 
     @Override
     public void update(@NotNull AnActionEvent event) {

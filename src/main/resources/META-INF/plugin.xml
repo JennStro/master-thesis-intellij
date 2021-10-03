@@ -16,7 +16,7 @@
         <!-- Add your extensions here -->
     </extensions>
     <actions>
-        <action id="TestID" class="Test" text="TestName" description="Test desciption">
+        <action id="FindingSomeBugs" class="Main" text="Find bugs!" description="Find bugs!">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
     </actions>
