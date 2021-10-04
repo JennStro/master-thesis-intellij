@@ -1,4 +1,5 @@
 
+import Statements.AssignmentStatement;
 import Statements.IfStatement;
 import Statements.Node;
 import org.junit.jupiter.api.BeforeEach;
@@ -166,10 +167,20 @@ public class AnalyserTest {
     }
 
     @Test
+    public void getConditionalExprFromIfStatement() {
+        String program = "if(true) {int a = 5;}";
+        Assertions.assertEquals("true", analyser.getConditionalExpressionOfIf(analyser.getTokens(program)).getTree().toString());
+
+        String nestedIfProgram = "if((true && false) || true) {int a = 5;}";
+        Assertions.assertEquals( "(true&&false)||true", analyser.getConditionalExpressionOfIf(analyser.getTokens(nestedIfProgram)).getTree().toString());
+
+        Assertions.assertEquals("{", analyser.getConditionalExpressionOfIf(analyser.getTokens(nestedIfProgram)).getRestOfTokens().get(0));
+    }
+
+    @Test
     public void ifStatementWithBody() {
         String program = "if(true) {int a = 5;}";
-        ArrayList<Node> parsedProgram = analyser.getParseTree(program);
-        Assertions.assertTrue(parsedProgram.get(0) instanceof IfStatement);
-        Assertions.assertEquals(parsedProgram.get(0).getExpression(), "true");
+        Node parsedProgram = analyser.getParseTree(analyser.getTokens(program));
+        Assertions.assertTrue(parsedProgram.getChildren().get(0) instanceof IfStatement);
     }
 }

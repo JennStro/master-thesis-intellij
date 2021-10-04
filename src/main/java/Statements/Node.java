@@ -8,7 +8,7 @@ public interface Node {
 
     void setChildren(ArrayList<Node> children);
 
-    String getExpression();
-
     String toString();
+
+    void addChild(Node child);
 }

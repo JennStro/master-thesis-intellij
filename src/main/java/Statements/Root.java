@@ -2,12 +2,16 @@ package Statements;
 
 import java.util.ArrayList;
 
-public class AssignmentStatement implements Node {
+public class Root implements Node {
 
     private ArrayList<Node> children;
 
-    public AssignmentStatement(ArrayList<Node> children) {
+    public Root(ArrayList<Node> children) {
         this.children = children;
+    }
+
+    public Root() {
+
     }
 
     @Override

@@ -1,9 +1,6 @@
-import Statements.IfStatement;
-import Statements.Node;
+import Statements.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Stack;
+import java.util.*;
 
 public class Analyser {
 
@@ -181,31 +178,55 @@ public class Analyser {
         return errors;
     }
 
-    public ArrayList<Node> getParseTree(String program) {
-        ArrayList<String> tokens = getTokens(program);
-        ArrayList<Node> tree = new ArrayList<>();
+    public Node getParseTree(ArrayList<String> tokens) {
+        return getParseTree(tokens, new Root()).getTree();
+    }
+
+    private Result getParseTree(ArrayList<String> tokens, Node parseTree) {
+
+        if (tokens.size() == 0) {
+            return new Result(tokens, parseTree);
+        }
+
+        if (parseTree.getChildren() == null) {
+            parseTree.setChildren(new ArrayList<>());
+        }
+
+        if (tokens.get(0).equals("if")) {
+            Result conditionalExpression = getConditionalExpressionOfIf(tokens);
+
+            int endOfIfBody = conditionalExpression.getRestOfTokens().indexOf("}");
+            ArrayList<String> ifStatementBodyTokens = new ArrayList<>(conditionalExpression.getRestOfTokens().subList(0, endOfIfBody));
+            //Result ifStatementBody = getParseTree(ifStatementBodyTokens, parseTree);
+
+            parseTree.addChild(new IfStatement(new ArrayList<>(), (Expression) conditionalExpression.getTree()));
+
+            return getParseTree(conditionalExpression.getRestOfTokens(), parseTree);
+        }
+        if (tokens.get(0).equals("=")) {
+            parseTree.addChild(new AssignmentStatement(new ArrayList<>()));
+            return new Result(new ArrayList<>(tokens.subList(1, tokens.size())), parseTree);
+        }
+        return getParseTree(new ArrayList<>(tokens.subList(1, tokens.size())), parseTree);
+    }
+
+    public Result getConditionalExpressionOfIf(ArrayList<String> tokens) {
+        StringBuilder conditionalExpression = new StringBuilder();
+        Stack<String> paranthesis = new Stack<>();
 
         int i = 0;
-        while (tokens.size() >0) {
-            if (tokens.get(i).equals("if")) {
-                StringBuilder conditionalExpression = new StringBuilder();
-                Stack<String> paranthesis = new Stack<>();
-
-                if (tokens.get(i+1).equals("(")) {
-                    paranthesis.push("(");
-                    i +=1;
-                } else if (tokens.get(i+1).equals(")")) {
-                    paranthesis.pop();
-                    i +=1;
-                }
-                if (!paranthesis.empty()) {
-                    conditionalExpression.append(tokens.get(i+1));
-                }
-
-                tree.add(new IfStatement(new ArrayList<>(), conditionalExpression.toString()));
-                return tree;
+        while (i < tokens.size()) {
+            if (tokens.get(i).equals(")")) {
+                paranthesis.pop();
             }
+            if (!paranthesis.empty()) {
+                conditionalExpression.append(tokens.get(i));
+            }
+            if (tokens.get(i).equals("(")) {
+                paranthesis.push("(");
+            }
+            i +=1;
         }
-        return tree;
+        return new Result(new ArrayList<>(tokens.subList(tokens.indexOf("{"), tokens.size())), new Expression(conditionalExpression.toString()));
     }
 }

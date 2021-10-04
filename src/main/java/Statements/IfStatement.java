@@ -3,10 +3,10 @@ import java.util.ArrayList;
 
 public class IfStatement implements Node {
 
-    private String conditionalExpression;
+    private Expression conditionalExpression;
     private ArrayList<Node> children;
 
-    public IfStatement(ArrayList<Node> children, String conditionalExpression) {
+    public IfStatement(ArrayList<Node> children, Expression conditionalExpression) {
         this.children = children;
         this.conditionalExpression = conditionalExpression;
     }
@@ -22,18 +22,13 @@ public class IfStatement implements Node {
     }
 
     @Override
-    public String getExpression() {
-        return this.conditionalExpression;
+    public void addChild(Node child) {
+        if (this.children != null) {
+            this.children.add(child);
+        }
     }
 
-    @Override
-    public String toString() {
-        StringBuilder statements = new StringBuilder();
-        for (Node child : children) {
-
-        }
-        return "IfStatement{" +
-                "expression='" + conditionalExpression + '\'' +
-                '}';
+    public Expression getExpression() {
+        return this.conditionalExpression;
     }
 }
