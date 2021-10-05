@@ -1,8 +1,11 @@
+import java.util.ArrayList;
+
 public class MaybeError {
 
     private boolean hasError;
     private int lineNumber;
     private ErrorType errorType;
+    private ArrayList<Statement> affectedLinesFromError;
 
     public boolean isError() {
         return hasError;
@@ -43,4 +46,15 @@ public class MaybeError {
         return this;
     }
 
+    public void setAffectedLines(ArrayList<Statement> affectedLinesFromError) {
+        this.affectedLinesFromError = affectedLinesFromError;
+    }
+
+    public ArrayList<Statement> getAffectedLines() {
+        return affectedLinesFromError;
+    }
+
+    public String toString() {
+        return "HasError: " + hasError + " Error: " + errorType + " " + " On line: " + lineNumber + " AffectedStatements: " + affectedLinesFromError;
+    }
 }

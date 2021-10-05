@@ -92,13 +92,13 @@ public class AnalyserTest {
     @Test
     public void shouldFindErrorOnLineThree() {
         String codeWithError = "\n \n if(true);";
-        Assertions.assertEquals(3, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
+        Assertions.assertEquals(2, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
     }
 
     @Test
     public void shouldFindErrorOnLineThreeNotLastLine() {
         String codeWithError = "\n \n if(true); \n";
-        Assertions.assertEquals(3, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
+        Assertions.assertEquals(2, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
     }
 
     @Test
@@ -185,6 +185,19 @@ public class AnalyserTest {
         String expectedString = "Program( Statement(), IfStatement( Body ( Statement(), Statement() )) )";
         Program statements = analyser.getStatements(analyser.getTokens(program));
         Assertions.assertEquals(expectedString, statements.toString());
+
+        String program2 = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6; \n } \n int x = 5;";
+        String expectedString2 = "Program( Statement(), IfStatement( Body ( Statement(), Statement() )), Statement() )";
+        Program statements2 = analyser.getStatements(analyser.getTokens(program2));
+        Assertions.assertEquals(expectedString2, statements2.toString());
+    }
+
+    @Test
+    public void getAffectedLinesFromIfError() {
+        String program = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6;}";
+        ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
+        System.out.println(errors.get(0));
+        Assertions.assertEquals(1, errors.get(0).getAffectedLines().get(0).getLineNumber());
     }
 
 }

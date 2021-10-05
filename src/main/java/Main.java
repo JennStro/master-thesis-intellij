@@ -71,11 +71,11 @@ public class Main extends AnAction {
 
                     Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     CaretModel caretModel = editor.getCaretModel();
-                    caretModel.moveToLogicalPosition(new LogicalPosition(error.getLineNumber()-1, 0));
+                    caretModel.moveToLogicalPosition(new LogicalPosition(error.getLineNumber(), 0));
                     ScrollingModel scrollingModel = editor.getScrollingModel();
                     scrollingModel.scrollToCaret(ScrollType.CENTER);
                     editor.getSelectionModel().selectLineAtCaret();
-                    editor.getMarkupModel().addLineHighlighter(error.getLineNumber() - 1, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+                    editor.getMarkupModel().addLineHighlighter(error.getLineNumber() , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
                 }
             }
         }

@@ -107,7 +107,7 @@ public class Analyser {
         String[] actualPattern = new String[4];
         Stack<String> paranthesis = new Stack<>();
         int matchedToken = 0;
-        int lineNumber = 1;
+        int lineNumber = 0;
         for (int i = 0; i < tokens.size(); i++) {
             String token = tokens.get(i);
             String predecessor = "";
@@ -154,7 +154,7 @@ public class Analyser {
         String[] dangerPattern = new String[]{"if", "(", "&", ")"};
         String[] actualPattern = new String[4];
         int matchedToken = 0;
-        int lineNumber = 1;
+        int lineNumber = 0;
         for (String token : tokens) {
             if (token.equals("if")) {
                 actualPattern[matchedToken] = token;
@@ -190,13 +190,21 @@ public class Analyser {
         return errors;
     }
 
-    public HashMap<String, Integer> getAffectedLinesFromError(MaybeError error, ArrayList<String> tokens) {
-        if (error.isError()) {
-            if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
-                //ArrayList<String> body = getBodyFromIfStatment(error.getLineNumber(), tokens);
+    public ArrayList<MaybeError> attachAffectedLinesToErrors(ArrayList<MaybeError> errors, ArrayList<String> tokens) {
+        ArrayList<MaybeError> errorsWithAffectedLinesAttached = new ArrayList<>();
+        for (MaybeError error : errors)
+            if (error.isError()) {
+                error.setAffectedLines(getAffectedLinesFromError(error, tokens));
+                errorsWithAffectedLinesAttached.add(error);
             }
+        return errorsWithAffectedLinesAttached;
+    }
+
+    private ArrayList<Statement> getAffectedLinesFromError(MaybeError error, ArrayList<String> tokens) {
+        if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
+            return getStatements(tokens).getStatements();
         }
-        return new HashMap<>();
+        return null;
     }
 
     private ArrayList<Token> getTokenWithLineNumber(ArrayList<String> tokens) {
@@ -227,9 +235,8 @@ public class Analyser {
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
 
             Program bodyStatements = getStatements(body, new Program(new ArrayList<>()), seenTokens);
-            System.out.println(bodyStatements);
             statements.add(new IfStatement(token.getLineNumber(), body.toString(), bodyStatements.getStatements()));
-            return statements;
+            return getStatements(rest, statements, seenTokens);
         }
 
         if (token.getValue().equals("=")) {
