@@ -176,7 +176,10 @@ public class AnalyserTest {
     public void getIfStatement() {
         String program = "if(true); \n { int a = 5; \n int b = 6;}";
         ArrayList<Statement> statements = analyser.getStatements(analyser.getTokens(program));
-        System.out.println(statements);
+        String expectedString = "IfStatement( Body(Statement() Statement() ))";
+        IfStatement ifStatement = (IfStatement) analyser.getStatements(analyser.getTokens(program)).get(0);
+        Assertions.assertEquals(expectedString, ifStatement.toString());
+        Assertions.assertEquals(1, ifStatement.getBody().get(0).getLineNumber());
     }
 
 }

@@ -1,9 +1,9 @@
-public class Statement {
+public class Token {
 
-    protected int lineNumber;
-    protected String value;
+    private int lineNumber;
+    private String value;
 
-    public Statement(int lineNumber, String value) {
+    public Token(int lineNumber, String value) {
         this.lineNumber = lineNumber;
         this.value = value;
     }
@@ -24,8 +24,5 @@ public class Statement {
         this.value = value;
     }
 
-    @Override
-    public String toString() {
-        return "Statement()";
-    }
+
 }

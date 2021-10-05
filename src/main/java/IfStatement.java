@@ -32,7 +32,8 @@ public class IfStatement extends Statement {
         StringBuilder statements = new StringBuilder();
         for (Statement statement : body) {
             statements.append(statement.toString());
+            statements.append(" ");
         }
-        return "IfStatement(" + statements.toString() + ")";
+        return "IfStatement( Body(" + statements.toString() + "))";
     }
 }

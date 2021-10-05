@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Analyser {
 
@@ -214,38 +215,52 @@ public class Analyser {
         return body;
     }
 
-    public ArrayList<Statement> getStatements(ArrayList<String> tokens) {
-        return getStatements(tokens, new ArrayList<>(), 0, new ArrayList<>());
+    private ArrayList<Token> getTokenWithLineNumber(ArrayList<String> tokens) {
+        int lineNumber = 0;
+        ArrayList<Token> tokensWithLineNumber = new ArrayList<>();
+        for(String token : tokens) {
+            if (token.equals("\n")) {
+                lineNumber += 1;
+            }
+            tokensWithLineNumber.add(new Token(lineNumber, token));
+        }
+        return tokensWithLineNumber;
     }
 
-    private ArrayList<Statement> getStatements(ArrayList<String> tokens, ArrayList<Statement> statements, int lineNumber, ArrayList<String> seenTokens) {
+    public ArrayList<Statement> getStatements(ArrayList<String> tokens) {
+        return getStatements(getTokenWithLineNumber(tokens), new ArrayList<>(), new ArrayList<>());
+    }
+
+    private ArrayList<Statement> getStatements(ArrayList<Token> tokens, ArrayList<Statement> statements, ArrayList<Token> seenTokens) {
         if (tokens.isEmpty()) {
             return statements;
         }
-        String token = tokens.get(0);
+        Token token = tokens.get(0);
         seenTokens.add(token);
 
-        if (token.equals("\n")) {
-            ArrayList<String> rest = new ArrayList<>(tokens.subList(1, tokens.size()));
-            return getStatements(rest, statements, lineNumber+1, seenTokens);
-        }
-        if (token.equals("if")) {
-            ArrayList<String> rest = new ArrayList<>(tokens.subList(tokens.indexOf("}"), tokens.size()));
-            ArrayList<String> body = new ArrayList<>(tokens.subList(tokens.indexOf("{"), tokens.indexOf("}")));
-            ArrayList<Statement> bodyStatements = getStatements(body, new ArrayList<>(), lineNumber, seenTokens);
+        if (token.getValue().equals("if")) {
+            ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
+            ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
+
+            //ArrayList<Token> rest = new ArrayList<>(tokens.subList(tokens.indexOf("}"), tokens.size()));
+            //ArrayList<Token> body = new ArrayList<>(tokens.subList(tokens.indexOf("{"), tokens.indexOf("}")));
+            ArrayList<Statement> bodyStatements = getStatements(body, new ArrayList<>(), seenTokens);
             System.out.println(bodyStatements);
-            statements.add(new IfStatement(lineNumber, body.toString(), bodyStatements));
+            statements.add(new IfStatement(token.getLineNumber(), body.toString(), bodyStatements));
             return statements;
         }
-        if (token.equals("=")) {
-            ArrayList<String> toNextStatement = new ArrayList<>(tokens.subList(0, tokens.indexOf(";")+1));
-            ArrayList<String> rest = new ArrayList<>(tokens.subList(tokens.indexOf(";")+1, tokens.size()));
-            statements.add(new Statement(lineNumber, toNextStatement.toString()));
-            return getStatements(rest, statements, lineNumber, seenTokens);
+
+        if (token.getValue().equals("=")) {
+            ArrayList<Token> statement = new ArrayList<>(List.of(seenTokens.get(seenTokens.size()-3), seenTokens.get(seenTokens.size()-2)));
+            ArrayList<Token> toNextStatement = tokens.stream().takeWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
+            statement.addAll(toNextStatement);
+            ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
+            statements.add(new Statement(token.getLineNumber(), statement.toString()));
+            return getStatements(rest, statements, seenTokens);
         }
 
-        ArrayList<String> rest = new ArrayList<>(tokens.subList(1, tokens.size()));
-        return getStatements(rest, statements, lineNumber, seenTokens);
+        ArrayList<Token> rest = new ArrayList<>(tokens.subList(1, tokens.size()));
+        return getStatements(rest, statements, seenTokens);
     }
 
 }
