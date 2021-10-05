@@ -172,4 +172,11 @@ public class AnalyserTest {
         Assertions.assertEquals(new ArrayList<>(List.of("int", "a", "=", "5", ";", "\n", "int", "b", "=", "6", ";")), body);
     }
 
+    @Test
+    public void getIfStatement() {
+        String program = "if(true); \n { int a = 5; \n int b = 6;}";
+        ArrayList<Statement> statements = analyser.getStatements(analyser.getTokens(program));
+        System.out.println(statements);
+    }
+
 }

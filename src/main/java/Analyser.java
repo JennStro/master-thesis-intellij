@@ -214,4 +214,38 @@ public class Analyser {
         return body;
     }
 
+    public ArrayList<Statement> getStatements(ArrayList<String> tokens) {
+        return getStatements(tokens, new ArrayList<>(), 0, new ArrayList<>());
+    }
+
+    private ArrayList<Statement> getStatements(ArrayList<String> tokens, ArrayList<Statement> statements, int lineNumber, ArrayList<String> seenTokens) {
+        if (tokens.isEmpty()) {
+            return statements;
+        }
+        String token = tokens.get(0);
+        seenTokens.add(token);
+
+        if (token.equals("\n")) {
+            ArrayList<String> rest = new ArrayList<>(tokens.subList(1, tokens.size()));
+            return getStatements(rest, statements, lineNumber+1, seenTokens);
+        }
+        if (token.equals("if")) {
+            ArrayList<String> rest = new ArrayList<>(tokens.subList(tokens.indexOf("}"), tokens.size()));
+            ArrayList<String> body = new ArrayList<>(tokens.subList(tokens.indexOf("{"), tokens.indexOf("}")));
+            ArrayList<Statement> bodyStatements = getStatements(body, new ArrayList<>(), lineNumber, seenTokens);
+            System.out.println(bodyStatements);
+            statements.add(new IfStatement(lineNumber, body.toString(), bodyStatements));
+            return statements;
+        }
+        if (token.equals("=")) {
+            ArrayList<String> toNextStatement = new ArrayList<>(tokens.subList(0, tokens.indexOf(";")+1));
+            ArrayList<String> rest = new ArrayList<>(tokens.subList(tokens.indexOf(";")+1, tokens.size()));
+            statements.add(new Statement(lineNumber, toNextStatement.toString()));
+            return getStatements(rest, statements, lineNumber, seenTokens);
+        }
+
+        ArrayList<String> rest = new ArrayList<>(tokens.subList(1, tokens.size()));
+        return getStatements(rest, statements, lineNumber, seenTokens);
+    }
+
 }
