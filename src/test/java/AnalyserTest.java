@@ -165,25 +165,26 @@ public class AnalyserTest {
     }
 
     @Test
-    public void getEffectedLinesFromIfError() {
-        String program = "if(true); \n { int a = 5; \n int b = 6;}";
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(program);
-        ArrayList<String> body = analyser.getBodyFromIfStatment(errors.get(0).getLineNumber(), analyser.getTokens(program));
-        Assertions.assertEquals(new ArrayList<>(List.of("int", "a", "=", "5", ";", "\n", "int", "b", "=", "6", ";")), body);
-    }
-
-    @Test
     public void getIfStatement() {
         String program = "if(true); \n { int a = 5; \n int b = 6;}";
-        String expectedString = "IfStatement( Body(Statement() Statement() ))";
-        IfStatement ifStatement = (IfStatement) analyser.getStatements(analyser.getTokens(program)).get(0);
+        String expectedString = "IfStatement( Body ( Statement(), Statement() ))";
+        IfStatement ifStatement = (IfStatement) analyser.getStatements(analyser.getTokens(program)).getStatements().get(0);
         Assertions.assertEquals(expectedString, ifStatement.toString());
         Assertions.assertEquals(1, ifStatement.getBody().get(0).getLineNumber());
 
         String nestedProgram =  "if(true); \n { int a = 5; \n if (false) { \n int b = 6; \n } \n }";
-        String expectedNestedString = "IfStatement( Body(Statement() IfStatement( Body(Statement() )) ))";
-        IfStatement nestedIfStatement = (IfStatement) analyser.getStatements(analyser.getTokens(nestedProgram)).get(0);
+        String expectedNestedString = "IfStatement( Body ( Statement(), IfStatement( Body ( Statement() )) ))";
+        IfStatement nestedIfStatement = (IfStatement) analyser.getStatements(analyser.getTokens(nestedProgram)).getStatements().get(0);
         Assertions.assertEquals(expectedNestedString, nestedIfStatement.toString());
+        Assertions.assertEquals(2, nestedIfStatement.getBody().get(1).getLineNumber());
+    }
+
+    @Test
+    public void getAssignmentStatementAndIfStatement() {
+        String program = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6;}";
+        String expectedString = "Program( Statement(), IfStatement( Body ( Statement(), Statement() )) )";
+        Program statements = analyser.getStatements(analyser.getTokens(program));
+        Assertions.assertEquals(expectedString, statements.toString());
     }
 
 }

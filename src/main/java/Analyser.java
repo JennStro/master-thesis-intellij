@@ -193,26 +193,10 @@ public class Analyser {
     public HashMap<String, Integer> getAffectedLinesFromError(MaybeError error, ArrayList<String> tokens) {
         if (error.isError()) {
             if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
-                ArrayList<String> body = getBodyFromIfStatment(error.getLineNumber(), tokens);
+                //ArrayList<String> body = getBodyFromIfStatment(error.getLineNumber(), tokens);
             }
         }
         return new HashMap<>();
-    }
-
-    public ArrayList<String> getBodyFromIfStatment(int lineOfError, ArrayList<String> tokens) {
-        int i = 0;
-        int lineNumber = 0;
-        ArrayList<String> body = new ArrayList<>();
-        while (i < tokens.size() && !tokens.get(i).equals("}")) {
-            if (tokens.get(i).equals("\n")) {
-                lineNumber += 1;
-                if (lineNumber == lineOfError) {
-                    body = new ArrayList<>(tokens.subList(i+2, tokens.indexOf("}")));
-                }
-            }
-            i += 1;
-        }
-        return body;
     }
 
     private ArrayList<Token> getTokenWithLineNumber(ArrayList<String> tokens) {
@@ -227,11 +211,11 @@ public class Analyser {
         return tokensWithLineNumber;
     }
 
-    public ArrayList<Statement> getStatements(ArrayList<String> tokens) {
-        return getStatements(getTokenWithLineNumber(tokens), new ArrayList<>(), new ArrayList<>());
+    public Program getStatements(ArrayList<String> tokens) {
+        return getStatements(getTokenWithLineNumber(tokens), new Program(new ArrayList<>()), new ArrayList<>());
     }
 
-    private ArrayList<Statement> getStatements(ArrayList<Token> tokens, ArrayList<Statement> statements, ArrayList<Token> seenTokens) {
+    private Program getStatements(ArrayList<Token> tokens, Program statements, ArrayList<Token> seenTokens) {
         if (tokens.isEmpty()) {
             return statements;
         }
@@ -242,9 +226,9 @@ public class Analyser {
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
 
-            ArrayList<Statement> bodyStatements = getStatements(body, new ArrayList<>(), seenTokens);
+            Program bodyStatements = getStatements(body, new Program(new ArrayList<>()), seenTokens);
             System.out.println(bodyStatements);
-            statements.add(new IfStatement(token.getLineNumber(), body.toString(), bodyStatements));
+            statements.add(new IfStatement(token.getLineNumber(), body.toString(), bodyStatements.getStatements()));
             return statements;
         }
 
