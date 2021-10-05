@@ -1,5 +1,3 @@
-import Statements.*;
-
 import java.util.*;
 
 public class Analyser {
@@ -84,9 +82,22 @@ public class Analyser {
                 return previousTokens;
             }
             return getTokens(fileContent.substring(i), previousTokens);
-        } else {
-            return getTokens(fileContent.substring(1), previousTokens);
         }
+        if (Character.isDigit(fileContent.charAt(0))) {
+            StringBuilder token = new StringBuilder();
+            int i = 0;
+            while (i < fileContent.length() && Character.isDigit(fileContent.charAt(i))) {
+                token.append(fileContent.charAt(i));
+                i++;
+            }
+            previousTokens.add(token.toString());
+            if(i == fileContent.length()) {
+                return previousTokens;
+            }
+            return getTokens(fileContent.substring(i), previousTokens);
+        }
+        return getTokens(fileContent.substring(1), previousTokens);
+
     }
 
     public MaybeError hasSemicolonAfterIf(String fileContents) {
@@ -178,55 +189,29 @@ public class Analyser {
         return errors;
     }
 
-    public Node getParseTree(ArrayList<String> tokens) {
-        return getParseTree(tokens, new Root()).getTree();
+    public HashMap<String, Integer> getAffectedLinesFromError(MaybeError error, ArrayList<String> tokens) {
+        if (error.isError()) {
+            if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
+                ArrayList<String> body = getBodyFromIfStatment(error.getLineNumber(), tokens);
+            }
+        }
+        return new HashMap<>();
     }
 
-    private Result getParseTree(ArrayList<String> tokens, Node parseTree) {
-
-        if (tokens.size() == 0) {
-            return new Result(tokens, parseTree);
-        }
-
-        if (parseTree.getChildren() == null) {
-            parseTree.setChildren(new ArrayList<>());
-        }
-
-        if (tokens.get(0).equals("if")) {
-            Result conditionalExpression = getConditionalExpressionOfIf(tokens);
-
-            int endOfIfBody = conditionalExpression.getRestOfTokens().indexOf("}");
-            ArrayList<String> ifStatementBodyTokens = new ArrayList<>(conditionalExpression.getRestOfTokens().subList(0, endOfIfBody));
-            //Result ifStatementBody = getParseTree(ifStatementBodyTokens, parseTree);
-
-            parseTree.addChild(new IfStatement(new ArrayList<>(), (Expression) conditionalExpression.getTree()));
-
-            return getParseTree(conditionalExpression.getRestOfTokens(), parseTree);
-        }
-        if (tokens.get(0).equals("=")) {
-            parseTree.addChild(new AssignmentStatement(new ArrayList<>()));
-            return new Result(new ArrayList<>(tokens.subList(1, tokens.size())), parseTree);
-        }
-        return getParseTree(new ArrayList<>(tokens.subList(1, tokens.size())), parseTree);
-    }
-
-    public Result getConditionalExpressionOfIf(ArrayList<String> tokens) {
-        StringBuilder conditionalExpression = new StringBuilder();
-        Stack<String> paranthesis = new Stack<>();
-
+    public ArrayList<String> getBodyFromIfStatment(int lineOfError, ArrayList<String> tokens) {
         int i = 0;
-        while (i < tokens.size()) {
-            if (tokens.get(i).equals(")")) {
-                paranthesis.pop();
+        int lineNumber = 0;
+        ArrayList<String> body = new ArrayList<>();
+        while (i < tokens.size() && !tokens.get(i).equals("}")) {
+            if (tokens.get(i).equals("\n")) {
+                lineNumber += 1;
+                if (lineNumber == lineOfError) {
+                    body = new ArrayList<>(tokens.subList(i+2, tokens.indexOf("}")));
+                }
             }
-            if (!paranthesis.empty()) {
-                conditionalExpression.append(tokens.get(i));
-            }
-            if (tokens.get(i).equals("(")) {
-                paranthesis.push("(");
-            }
-            i +=1;
+            i += 1;
         }
-        return new Result(new ArrayList<>(tokens.subList(tokens.indexOf("{"), tokens.size())), new Expression(conditionalExpression.toString()));
+        return body;
     }
+
 }
