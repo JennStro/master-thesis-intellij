@@ -175,11 +175,15 @@ public class AnalyserTest {
     @Test
     public void getIfStatement() {
         String program = "if(true); \n { int a = 5; \n int b = 6;}";
-        ArrayList<Statement> statements = analyser.getStatements(analyser.getTokens(program));
         String expectedString = "IfStatement( Body(Statement() Statement() ))";
         IfStatement ifStatement = (IfStatement) analyser.getStatements(analyser.getTokens(program)).get(0);
         Assertions.assertEquals(expectedString, ifStatement.toString());
         Assertions.assertEquals(1, ifStatement.getBody().get(0).getLineNumber());
+
+        String nestedProgram =  "if(true); \n { int a = 5; \n if (false) { \n int b = 6; \n } \n }";
+        String expectedNestedString = "IfStatement( Body(Statement() IfStatement( Body(Statement() )) ))";
+        IfStatement nestedIfStatement = (IfStatement) analyser.getStatements(analyser.getTokens(nestedProgram)).get(0);
+        Assertions.assertEquals(expectedNestedString, nestedIfStatement.toString());
     }
 
 }

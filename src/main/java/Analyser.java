@@ -242,8 +242,6 @@ public class Analyser {
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
 
-            //ArrayList<Token> rest = new ArrayList<>(tokens.subList(tokens.indexOf("}"), tokens.size()));
-            //ArrayList<Token> body = new ArrayList<>(tokens.subList(tokens.indexOf("{"), tokens.indexOf("}")));
             ArrayList<Statement> bodyStatements = getStatements(body, new ArrayList<>(), seenTokens);
             System.out.println(bodyStatements);
             statements.add(new IfStatement(token.getLineNumber(), body.toString(), bodyStatements));
