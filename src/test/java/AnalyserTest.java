@@ -190,6 +190,12 @@ public class AnalyserTest {
         String expectedString2 = "Program( Statement(), IfStatement( Body ( Statement(), Statement() )), Statement() )";
         Program statements2 = analyser.getStatements(analyser.getTokens(program2));
         Assertions.assertEquals(expectedString2, statements2.toString());
+
+        String program3 = "if((true && false) || false); \n { int a = 5; \n int b = 6;}";
+        String expectedExpression = "( true && false ) || false";
+        Program statements3 = analyser.getStatements(analyser.getTokens(program3));
+        IfStatement statement = (IfStatement) statements3.getStatements().get(0);
+        Assertions.assertEquals(expectedExpression, statement.getExpressionString());
     }
 
     @Test
@@ -197,7 +203,7 @@ public class AnalyserTest {
         String program = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6;}";
         ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
         System.out.println(errors.get(0));
-        Assertions.assertEquals(1, errors.get(0).getAffectedLines().get(0).getLineNumber());
+        Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0).getLineNumber());
     }
 
 }

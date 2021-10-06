@@ -1,11 +1,13 @@
+import java.util.ArrayList;
+
 public class Statement {
 
     protected int lineNumber;
-    protected String value;
+    protected ArrayList<Token> tokens;
 
-    public Statement(int lineNumber, String value) {
+    public Statement(int lineNumber, ArrayList<Token> tokens) {
         this.lineNumber = lineNumber;
-        this.value = value;
+        this.tokens = tokens;
     }
 
     public int getLineNumber() {
@@ -16,12 +18,12 @@ public class Statement {
         this.lineNumber = lineNumber;
     }
 
-    public String getValue() {
-        return value;
+    public ArrayList<Token> getTokens() {
+        return tokens;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setTokens(ArrayList<Token> value) {
+        this.tokens = value;
     }
 
     @Override

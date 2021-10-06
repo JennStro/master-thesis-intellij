@@ -202,6 +202,12 @@ public class Analyser {
 
     private ArrayList<Statement> getAffectedLinesFromError(MaybeError error, ArrayList<String> tokens) {
         if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
+            ArrayList<Statement> statements = getStatements(tokens).getStatements();
+            for (Statement statement : statements) {
+                if (error.getLineNumber() == statement.getLineNumber() && statement instanceof IfStatement) {
+                    return ((IfStatement) statement).getBody();
+                }
+            }
             return getStatements(tokens).getStatements();
         }
         return null;
@@ -233,9 +239,9 @@ public class Analyser {
         if (token.getValue().equals("if")) {
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
-
+            ArrayList<Token> expression = getConditionalExpression(tokens);
             Program bodyStatements = getStatements(body, new Program(new ArrayList<>()), seenTokens);
-            statements.add(new IfStatement(token.getLineNumber(), body.toString(), bodyStatements.getStatements()));
+            statements.add(new IfStatement(token.getLineNumber(), expression, bodyStatements.getStatements()));
             return getStatements(rest, statements, seenTokens);
         }
 
@@ -244,12 +250,30 @@ public class Analyser {
             ArrayList<Token> toNextStatement = tokens.stream().takeWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
             statement.addAll(toNextStatement);
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
-            statements.add(new Statement(token.getLineNumber(), statement.toString()));
+            statements.add(new Statement(token.getLineNumber(), statement));
             return getStatements(rest, statements, seenTokens);
         }
 
         ArrayList<Token> rest = new ArrayList<>(tokens.subList(1, tokens.size()));
         return getStatements(rest, statements, seenTokens);
+    }
+
+    private ArrayList<Token> getConditionalExpression(ArrayList<Token> tokens) {
+        ArrayList<Token> expression = tokens.stream()
+                .takeWhile(t -> !t.getValue().equals("{"))
+                .dropWhile(t -> !t.getValue().equals("("))
+                .collect(Collectors.toCollection(ArrayList::new));
+        expression.remove(0);
+
+        Collections.reverse(expression);
+        expression = expression.stream()
+                .dropWhile(t -> !t.getValue().equals(")"))
+                .collect(Collectors.toCollection(ArrayList::new));
+        expression.remove(0);
+
+        Collections.reverse(expression);
+
+        return expression;
     }
 
 }

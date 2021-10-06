@@ -3,11 +3,9 @@ import java.util.ArrayList;
 public class IfStatement extends Statement {
 
     private ArrayList<Statement> body;
-    private String expression;
 
-
-    public IfStatement(int lineNumber, String value, ArrayList<Statement> body) {
-        super(lineNumber, value);
+    public IfStatement(int lineNumber, ArrayList<Token> expression, ArrayList<Statement> body) {
+        super(lineNumber, expression);
         this.body = body;
     }
 
@@ -19,12 +17,12 @@ public class IfStatement extends Statement {
         this.body = body;
     }
 
-    public String getExpression() {
-        return expression;
+    public ArrayList<Token> getExpression() {
+        return this.tokens;
     }
 
-    public void setExpression(String expression) {
-        this.expression = expression;
+    public void setExpression(ArrayList<Token> expression) {
+        this.tokens = expression;
     }
 
     @Override
@@ -36,4 +34,14 @@ public class IfStatement extends Statement {
         }
         return "IfStatement( Body ( " + statements.substring(0, statements.lastIndexOf(",")) + " ))";
     }
+
+    public String getExpressionString() {
+        StringBuilder builder = new StringBuilder();
+        for (Token token : tokens) {
+            builder.append(token.toString());
+            builder.append(" ");
+        }
+        return builder.substring(0, builder.lastIndexOf(" "));
+    }
+
 }
