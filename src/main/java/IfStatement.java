@@ -10,7 +10,7 @@ public class IfStatement extends Statement {
     }
 
     public ArrayList<Statement> getBody() {
-        return body;
+        return this.body;
     }
 
     public void setBody(ArrayList<Statement> body) {

@@ -200,7 +200,7 @@ public class AnalyserTest {
 
     @Test
     public void getAffectedLinesFromIfError() {
-        String program = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6;}";
+        String program = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;}";
         ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
         System.out.println(errors.get(0));
         Assertions.assertEquals(3, errors.get(0).getAffectedLines().size());

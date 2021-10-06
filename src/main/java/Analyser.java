@@ -206,35 +206,30 @@ public class Analyser {
         }
         Statement statement = statements.get(0);
         if (statement instanceof IfStatement) {
-            ArrayList<Statement> statementsContainingVariable = getAllStatementsContainingVariable(variable, ((IfStatement) statement).getBody(), foundStatements);
-            foundStatements.addAll(statementsContainingVariable);
-            statements.remove(0);
-            return getAllStatementsContainingVariable(variable, statements, foundStatements);
+            return getAllStatementsContainingVariable(variable, ((IfStatement) statement).getBody(), foundStatements);
         }
         if (statement.getVariables().contains(variable)) {
             foundStatements.add(statement);
-            statements.remove(0);
-            return getAllStatementsContainingVariable(variable, statements, foundStatements);
+            ArrayList<Statement> rest = new ArrayList<>(statements.subList(1, statements.size()));
+            return getAllStatementsContainingVariable(variable, rest, foundStatements);
         }
-        statements.remove(0);
-        return getAllStatementsContainingVariable(variable, statements, foundStatements);
+        ArrayList<Statement> rest = new ArrayList<>(statements.subList(1, statements.size()));
+        return getAllStatementsContainingVariable(variable, rest, foundStatements);
     }
 
     private ArrayList<Statement> getAffectedStatementsFromError(MaybeError error, ArrayList<String> tokens) {
+        ArrayList<Statement> statements = getStatements(tokens).getStatements();
         if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
-            ArrayList<Statement> statements = getStatements(tokens).getStatements();
+
             for (Statement statement : statements) {
                 if (error.getLineNumber() == statement.getLineNumber() && statement instanceof IfStatement) {
 
                     ArrayList<Statement> body = ((IfStatement) statement).getBody();
-                    System.out.println(body);
 
                     HashSet<String> variablesToLookFor = new HashSet<>();
                     for (Statement bodyStatement : body) {
                         variablesToLookFor.addAll(bodyStatement.getVariables());
                     }
-
-                    System.out.println(variablesToLookFor);
 
                     ArrayList<Statement> statementsWithUseOfEffectedVariables = new ArrayList<>();
                     for (String variable : variablesToLookFor) {
@@ -282,7 +277,8 @@ public class Analyser {
 
             seenTokens.add(token);
             Program bodyStatements = getStatements(body, new Program(new ArrayList<>()), seenTokens);
-            statements.add(new IfStatement(token.getLineNumber(), expression, bodyStatements.getStatements()));
+            IfStatement statement = new IfStatement(token.getLineNumber(), expression, bodyStatements.getStatements());
+            statements.add(statement);
             return getStatements(rest, statements, seenTokens);
         }
         if (token.getValue().equals(";")) {
