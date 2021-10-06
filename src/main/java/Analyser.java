@@ -206,7 +206,9 @@ public class Analyser {
         }
         Statement statement = statements.get(0);
         if (statement instanceof IfStatement) {
-            return getAllStatementsContainingVariable(variable, ((IfStatement) statement).getBody(), foundStatements);
+            foundStatements.addAll(getAllStatementsContainingVariable(variable, ((IfStatement) statement).getBody(), new ArrayList<>()));
+            ArrayList<Statement> rest = new ArrayList<>(statements.subList(1, statements.size()));
+            return getAllStatementsContainingVariable(variable, rest, foundStatements);
         }
         if (statement.getVariables().contains(variable)) {
             foundStatements.add(statement);

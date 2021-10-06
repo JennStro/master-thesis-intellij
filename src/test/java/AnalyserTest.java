@@ -207,6 +207,13 @@ public class AnalyserTest {
         Assertions.assertEquals(0, errors.get(0).getAffectedLines().get(0));
         Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(1));
 
+        String program2 = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;} assert a == 5;";
+        ArrayList<MaybeError> errors2 = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program2), analyser.getTokens(program2));
+        System.out.println(errors2.get(0));
+        Assertions.assertEquals(4, errors2.get(0).getAffectedLines().size());
+        Assertions.assertEquals(0, errors2.get(0).getAffectedLines().get(0));
+        Assertions.assertEquals(3, errors2.get(0).getAffectedLines().get(3));
+
     }
 
     @Test
@@ -226,11 +233,12 @@ public class AnalyserTest {
         String expected = "assert a == b";
         ArrayList<String> expectedVariables = new ArrayList<>(List.of("a", "b"));
 
-        Statement statement = analyser.getStatements(analyser.getTokens(program)).getStatements().get(0);
+        Program statements = analyser.getStatements(analyser.getTokens(program));
+        Statement statement = statements.getStatements().get(0);
 
         Assertions.assertEquals(expected, statement.getTokenString());
         Assertions.assertEquals(expectedVariables, statement.getVariables());
-
+        Assertions.assertEquals("Program( Statement( assert a == b ) )", statements.toString());
     }
 
 }
