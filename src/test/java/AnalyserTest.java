@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class AnalyserTest {
 
@@ -223,8 +224,13 @@ public class AnalyserTest {
     @Test
     public void getStatement() {
         String program = "assert a == b;";
-        //Statement statement = analyser.getStatements(analyser.getTokens(program)).getStatements().get(0);
+        String expected = "assert a == b";
+        ArrayList<String> expectedVariables = new ArrayList<>(List.of("a", "b"));
 
+        Statement statement = analyser.getStatements(analyser.getTokens(program)).getStatements().get(0);
+
+        Assertions.assertEquals(expected, statement.getTokenString());
+        Assertions.assertEquals(expectedVariables, statement.getVariables());
 
     }
 

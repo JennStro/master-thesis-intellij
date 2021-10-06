@@ -285,17 +285,27 @@ public class Analyser {
             String variableValue = tokens.get(1).getValue();
 
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
+            rest.remove(0);
 
             AssignmentStatement statement = new AssignmentStatement(token.getLineNumber(), statementTokens)
                     .withVariableName(variableName).and.withVariableType(variableType).and.withVariableValue(variableValue);
             statements.add(statement);
-            seenTokens.add(token);
+            seenTokens.addAll(statementTokens);
             return getStatements(rest, statements, seenTokens);
         }
 
         if (token.getValue().equals(";")) {
             Collections.reverse(seenTokens);
+            ArrayList<Token> thisStatement = seenTokens.stream().takeWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
+            Collections.reverse(seenTokens);
+            Collections.reverse(thisStatement);
+            seenTokens.addAll(thisStatement);
+            seenTokens.add(token);
 
+            tokens.remove(0);
+
+            statements.add(new Statement(token.getLineNumber(), thisStatement));
+            return getStatements(tokens, statements, seenTokens);
 
         }
 
