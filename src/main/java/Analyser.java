@@ -273,7 +273,10 @@ public class Analyser {
 
         if (token.getValue().equals("if")) {
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
-            rest.remove(0);
+            if (!rest.isEmpty()) {
+                rest.remove(0);
+            }
+
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> expression = getConditionalExpression(tokens);
 

@@ -173,7 +173,7 @@ public class AnalyserTest {
         Assertions.assertEquals(1, ifStatement.getBody().get(0).getLineNumber());
 
         String nestedProgram =  "if(true); \n { int a = 5; \n if (false) { \n int b = 6; \n } \n }";
-        String expectedNestedString = "IfStatement( Body ( AssignmentStatement(), IfStatement( Body ( AssignmentStatement() )) ))";
+        String expectedNestedString = "IfStatement( Body ( Statement( int a = 5 ), IfStatement( Body ( Statement( int b = 6 ) )) ))";
         IfStatement nestedIfStatement = (IfStatement) analyser.getStatements(analyser.getTokens(nestedProgram)).getStatements().get(0);
         Assertions.assertEquals(expectedNestedString, nestedIfStatement.toString());
         Assertions.assertEquals(2, nestedIfStatement.getBody().get(1).getLineNumber());
