@@ -220,4 +220,12 @@ public class AnalyserTest {
         Assertions.assertEquals("2", statement2.getVariableValue());
     }
 
+    @Test
+    public void getStatement() {
+        String program = "assert a == b;";
+        //Statement statement = analyser.getStatements(analyser.getTokens(program)).getStatements().get(0);
+
+
+    }
+
 }

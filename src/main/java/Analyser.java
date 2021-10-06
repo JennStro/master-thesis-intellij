@@ -248,12 +248,13 @@ public class Analyser {
             return statements;
         }
         Token token = tokens.get(0);
-        seenTokens.add(token);
 
         if (token.getValue().equals("if")) {
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> expression = getConditionalExpression(tokens);
+
+            seenTokens.add(token);
             Program bodyStatements = getStatements(body, new Program(new ArrayList<>()), seenTokens);
             statements.add(new IfStatement(token.getLineNumber(), expression, bodyStatements.getStatements()));
             return getStatements(rest, statements, seenTokens);
@@ -264,8 +265,6 @@ public class Analyser {
             ArrayList<Token> statementTokens = seenTokens.stream()
                     .takeWhile(t -> !(t.getValue().equals(";") || t.getValue().equals("{")))
                     .collect(Collectors.toCollection(ArrayList::new));
-
-            statementTokens.remove(0);
 
             Collections.reverse(statementTokens);
             Collections.reverse(seenTokens);
@@ -280,9 +279,9 @@ public class Analyser {
 
             String variableType = "";
             if (variableHasBeenDeclaredInThisStatement) {
-                variableType = seenTokens.get(seenTokens.size()-3).getValue();
+                variableType = seenTokens.get(seenTokens.size()-lengthOfVariableDeclaration).getValue();
             }
-            String variableName = seenTokens.get(seenTokens.size()-2).getValue();
+            String variableName = seenTokens.get(seenTokens.size()-1).getValue();
             String variableValue = tokens.get(1).getValue();
 
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
@@ -290,10 +289,18 @@ public class Analyser {
             AssignmentStatement statement = new AssignmentStatement(token.getLineNumber(), statementTokens)
                     .withVariableName(variableName).and.withVariableType(variableType).and.withVariableValue(variableValue);
             statements.add(statement);
+            seenTokens.add(token);
             return getStatements(rest, statements, seenTokens);
         }
 
+        if (token.getValue().equals(";")) {
+            Collections.reverse(seenTokens);
+
+
+        }
+
         ArrayList<Token> rest = new ArrayList<>(tokens.subList(1, tokens.size()));
+        seenTokens.add(token);
         return getStatements(rest, statements, seenTokens);
     }
 
