@@ -203,7 +203,7 @@ public class AnalyserTest {
         String program = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6;}";
         ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
         System.out.println(errors.get(0));
-        Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0).getLineNumber());
+        Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0));
     }
 
 }

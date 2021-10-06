@@ -5,7 +5,7 @@ public class MaybeError {
     private boolean hasError;
     private int lineNumber;
     private ErrorType errorType;
-    private ArrayList<Statement> affectedLinesFromError;
+    private ArrayList<Statement> affectedStatementsFromError;
 
     public boolean isError() {
         return hasError;
@@ -46,15 +46,23 @@ public class MaybeError {
         return this;
     }
 
-    public void setAffectedLines(ArrayList<Statement> affectedLinesFromError) {
-        this.affectedLinesFromError = affectedLinesFromError;
+    public void setAffectedStatements(ArrayList<Statement> affectedStatementsFromError) {
+        this.affectedStatementsFromError = affectedStatementsFromError;
     }
 
-    public ArrayList<Statement> getAffectedLines() {
-        return affectedLinesFromError;
+    public ArrayList<Statement> getAffectedStatements() {
+        return affectedStatementsFromError;
     }
 
     public String toString() {
-        return "HasError: " + hasError + " Error: " + errorType + " " + " On line: " + lineNumber + " AffectedStatements: " + affectedLinesFromError;
+        return "HasError: " + hasError + " Error: " + errorType + " " + " On line: " + lineNumber + " AffectedStatements: " + affectedStatementsFromError;
     }
+    public ArrayList<Integer> getAffectedLines() {
+        ArrayList<Integer> lines = new ArrayList<>();
+        for (Statement statement : affectedStatementsFromError) {
+            lines.add(statement.getLineNumber());
+        }
+        return lines;
+    }
+
 }

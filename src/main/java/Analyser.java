@@ -194,17 +194,19 @@ public class Analyser {
         ArrayList<MaybeError> errorsWithAffectedLinesAttached = new ArrayList<>();
         for (MaybeError error : errors)
             if (error.isError()) {
-                error.setAffectedLines(getAffectedLinesFromError(error, tokens));
+                error.setAffectedStatements(getAffectedStatementsFromError(error, tokens));
                 errorsWithAffectedLinesAttached.add(error);
             }
         return errorsWithAffectedLinesAttached;
     }
 
-    private ArrayList<Statement> getAffectedLinesFromError(MaybeError error, ArrayList<String> tokens) {
+    private ArrayList<Statement> getAffectedStatementsFromError(MaybeError error, ArrayList<String> tokens) {
         if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
             ArrayList<Statement> statements = getStatements(tokens).getStatements();
             for (Statement statement : statements) {
                 if (error.getLineNumber() == statement.getLineNumber() && statement instanceof IfStatement) {
+                    ArrayList<Token> expression = ((IfStatement) statement).getExpression();
+
                     return ((IfStatement) statement).getBody();
                 }
             }
@@ -259,21 +261,37 @@ public class Analyser {
     }
 
     private ArrayList<Token> getConditionalExpression(ArrayList<Token> tokens) {
-        ArrayList<Token> expression = tokens.stream()
-                .takeWhile(t -> !t.getValue().equals("{"))
-                .dropWhile(t -> !t.getValue().equals("("))
+        boolean hasMatchingParanthesis = hasMatchingParanthesis(tokens, "(", ")");
+
+        if (hasMatchingParanthesis) {
+
+            ArrayList<Token> expression = tokens.stream()
+                    .takeWhile(t -> !t.getValue().equals("{"))
+                    .dropWhile(t -> !t.getValue().equals("("))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            expression.remove(0);
+
+            Collections.reverse(expression);
+            expression = expression.stream()
+                    .dropWhile(t -> !t.getValue().equals(")"))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            expression.remove(0);
+
+            Collections.reverse(expression);
+
+            return expression;
+        }
+        return new ArrayList<>();
+    }
+
+    private boolean hasMatchingParanthesis(ArrayList<Token> tokens, String open, String close) {
+        ArrayList<Token> closingParanthesis = tokens.stream()
+                .filter(token -> token.getValue().equals(close))
                 .collect(Collectors.toCollection(ArrayList::new));
-        expression.remove(0);
-
-        Collections.reverse(expression);
-        expression = expression.stream()
-                .dropWhile(t -> !t.getValue().equals(")"))
+        ArrayList<Token> openParanthesis = tokens.stream()
+                .filter(token -> token.getValue().equals(open))
                 .collect(Collectors.toCollection(ArrayList::new));
-        expression.remove(0);
-
-        Collections.reverse(expression);
-
-        return expression;
+        return closingParanthesis.size() == openParanthesis.size();
     }
 
 }

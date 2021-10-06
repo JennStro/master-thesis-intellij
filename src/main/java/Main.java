@@ -63,10 +63,11 @@ public class Main extends AnAction {
                 System.out.println(file.getName());
                 System.out.println(file.getContent());
                 System.out.println(analyser.getTokens(file.getContent()));
-                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(file.getContent())
-                        .stream().filter(MaybeError::isError)
+                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(file.getContent()).stream()
+                        .filter(MaybeError::isError)
                         .collect(Collectors.toCollection(ArrayList::new));
-                for (MaybeError error : errors) {
+                ArrayList<MaybeError> errorsWithAffectedLines = analyser.attachAffectedLinesToErrors(errors, analyser.getTokens(file.getContent()));
+                for (MaybeError error : errorsWithAffectedLines) {
                     Messages.showMessageDialog(project, "OPS: found error on line " + error.getLineNumber(), "An error: " + error.getErrorType(), Messages.getInformationIcon());
 
                     Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
@@ -76,6 +77,10 @@ public class Main extends AnAction {
                     scrollingModel.scrollToCaret(ScrollType.CENTER);
                     editor.getSelectionModel().selectLineAtCaret();
                     editor.getMarkupModel().addLineHighlighter(error.getLineNumber() , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+
+                    for (Integer line : error.getAffectedLines()) {
+                        editor.getMarkupModel().addLineHighlighter(line , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+                    }
                 }
             }
         }
