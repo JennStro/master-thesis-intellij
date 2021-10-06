@@ -12,7 +12,7 @@ public class AssignmentStatement extends Statement {
         super(lineNumber, tokens);
     }
 
-    public String getType() {
+    public String getVariableType() {
         return type;
     }
 
@@ -37,5 +37,10 @@ public class AssignmentStatement extends Statement {
     public AssignmentStatement withVariableValue(String value) {
         this.value = value;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "AssignmentStatement()";
     }
 }

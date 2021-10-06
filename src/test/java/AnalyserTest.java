@@ -167,13 +167,13 @@ public class AnalyserTest {
     @Test
     public void getIfStatement() {
         String program = "if(true); \n { int a = 5; \n int b = 6;}";
-        String expectedString = "IfStatement( Body ( Statement(), Statement() ))";
+        String expectedString = "IfStatement( Body ( AssignmentStatement(), AssignmentStatement() ))";
         IfStatement ifStatement = (IfStatement) analyser.getStatements(analyser.getTokens(program)).getStatements().get(0);
         Assertions.assertEquals(expectedString, ifStatement.toString());
         Assertions.assertEquals(1, ifStatement.getBody().get(0).getLineNumber());
 
         String nestedProgram =  "if(true); \n { int a = 5; \n if (false) { \n int b = 6; \n } \n }";
-        String expectedNestedString = "IfStatement( Body ( Statement(), IfStatement( Body ( Statement() )) ))";
+        String expectedNestedString = "IfStatement( Body ( AssignmentStatement(), IfStatement( Body ( AssignmentStatement() )) ))";
         IfStatement nestedIfStatement = (IfStatement) analyser.getStatements(analyser.getTokens(nestedProgram)).getStatements().get(0);
         Assertions.assertEquals(expectedNestedString, nestedIfStatement.toString());
         Assertions.assertEquals(2, nestedIfStatement.getBody().get(1).getLineNumber());
@@ -182,12 +182,12 @@ public class AnalyserTest {
     @Test
     public void getAssignmentStatementAndIfStatement() {
         String program = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6;}";
-        String expectedString = "Program( Statement(), IfStatement( Body ( Statement(), Statement() )) )";
+        String expectedString = "Program( AssignmentStatement(), IfStatement( Body ( AssignmentStatement(), AssignmentStatement() )) )";
         Program statements = analyser.getStatements(analyser.getTokens(program));
         Assertions.assertEquals(expectedString, statements.toString());
 
         String program2 = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6; \n } \n int x = 5;";
-        String expectedString2 = "Program( Statement(), IfStatement( Body ( Statement(), Statement() )), Statement() )";
+        String expectedString2 = "Program( AssignmentStatement(), IfStatement( Body ( AssignmentStatement(), AssignmentStatement() )), AssignmentStatement() )";
         Program statements2 = analyser.getStatements(analyser.getTokens(program2));
         Assertions.assertEquals(expectedString2, statements2.toString());
 
@@ -204,6 +204,15 @@ public class AnalyserTest {
         ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
         System.out.println(errors.get(0));
         Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0));
+    }
+
+    @Test
+    public void getAssignmentStatement() {
+        String program = "int a = 5;";
+        AssignmentStatement statement = (AssignmentStatement) analyser.getStatements(analyser.getTokens(program)).getStatements().get(0);
+        Assertions.assertEquals("int", statement.getVariableType());
+        Assertions.assertEquals("a", statement.getVariableName());
+        Assertions.assertEquals("5", statement.getVariableValue());
     }
 
 }
