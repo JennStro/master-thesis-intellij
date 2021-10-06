@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 public class AnalyserTest {
 
@@ -203,7 +202,7 @@ public class AnalyserTest {
         String program = "int a = 5; \n if(true); \n { int a = 5; \n int b = 6;}";
         ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
         System.out.println(errors.get(0));
-        Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0));
+        Assertions.assertEquals(0, errors.get(0).getAffectedLines().get(0));
     }
 
     @Test
@@ -213,6 +212,12 @@ public class AnalyserTest {
         Assertions.assertEquals("int", statement.getVariableType());
         Assertions.assertEquals("a", statement.getVariableName());
         Assertions.assertEquals("5", statement.getVariableValue());
+
+        String program2 = "int a = 5; b = 2;";
+        AssignmentStatement statement2 = (AssignmentStatement) analyser.getStatements(analyser.getTokens(program2)).getStatements().get(1);
+        Assertions.assertEquals("", statement2.getVariableType());
+        Assertions.assertEquals("b", statement2.getVariableName());
+        Assertions.assertEquals("2", statement2.getVariableValue());
     }
 
 }
