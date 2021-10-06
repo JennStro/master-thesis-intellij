@@ -200,6 +200,26 @@ public class Analyser {
         return errorsWithAffectedLinesAttached;
     }
 
+    private ArrayList<Statement> getAllStatementsContainingVariable(String variable, ArrayList<Statement> statements, ArrayList<Statement> foundStatements) {
+        if (statements.size() == 0) {
+            return foundStatements;
+        }
+        Statement statement = statements.get(0);
+        if (statement instanceof IfStatement) {
+            ArrayList<Statement> statementsContainingVariable = getAllStatementsContainingVariable(variable, ((IfStatement) statement).getBody(), foundStatements);
+            foundStatements.addAll(statementsContainingVariable);
+            statements.remove(0);
+            return getAllStatementsContainingVariable(variable, statements, foundStatements);
+        }
+        if (statement.getVariables().contains(variable)) {
+            foundStatements.add(statement);
+            statements.remove(0);
+            return getAllStatementsContainingVariable(variable, statements, foundStatements);
+        }
+        statements.remove(0);
+        return getAllStatementsContainingVariable(variable, statements, foundStatements);
+    }
+
     private ArrayList<Statement> getAffectedStatementsFromError(MaybeError error, ArrayList<String> tokens) {
         if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
             ArrayList<Statement> statements = getStatements(tokens).getStatements();
@@ -207,19 +227,20 @@ public class Analyser {
                 if (error.getLineNumber() == statement.getLineNumber() && statement instanceof IfStatement) {
 
                     ArrayList<Statement> body = ((IfStatement) statement).getBody();
-                    ArrayList<String> variablesToLookFor = new ArrayList<>();
+                    System.out.println(body);
+
+                    HashSet<String> variablesToLookFor = new HashSet<>();
                     for (Statement bodyStatement : body) {
-                        if (bodyStatement instanceof AssignmentStatement) {
-                            variablesToLookFor.add(((AssignmentStatement) bodyStatement).getVariableName());
-                        }
+                        variablesToLookFor.addAll(bodyStatement.getVariables());
                     }
 
-                    ArrayList<Statement> statmentsWithUseOfEffectedVariables = statements.stream()
-                            .filter(st -> st instanceof AssignmentStatement)
-                            .filter(st -> variablesToLookFor.contains(((AssignmentStatement) st).getVariableName()))
-                            .collect(Collectors.toCollection(ArrayList::new));
+                    System.out.println(variablesToLookFor);
 
-                    return statmentsWithUseOfEffectedVariables;
+                    ArrayList<Statement> statementsWithUseOfEffectedVariables = new ArrayList<>();
+                    for (String variable : variablesToLookFor) {
+                        statementsWithUseOfEffectedVariables.addAll(getAllStatementsContainingVariable(variable, statements, new ArrayList<>()));
+                    }
+                    return statementsWithUseOfEffectedVariables;
                 }
             }
             return getStatements(tokens).getStatements();
@@ -233,8 +254,9 @@ public class Analyser {
         for(String token : tokens) {
             if (token.equals("\n")) {
                 lineNumber += 1;
+            } else {
+                tokensWithLineNumber.add(new Token(lineNumber, token));
             }
-            tokensWithLineNumber.add(new Token(lineNumber, token));
         }
         return tokensWithLineNumber;
     }
@@ -251,6 +273,7 @@ public class Analyser {
 
         if (token.getValue().equals("if")) {
             ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
+            rest.remove(0);
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> expression = getConditionalExpression(tokens);
 
@@ -259,44 +282,9 @@ public class Analyser {
             statements.add(new IfStatement(token.getLineNumber(), expression, bodyStatements.getStatements()));
             return getStatements(rest, statements, seenTokens);
         }
-
-        if (token.getValue().equals("=")) {
-            Collections.reverse(seenTokens);
-            ArrayList<Token> statementTokens = seenTokens.stream()
-                    .takeWhile(t -> !(t.getValue().equals(";") || t.getValue().equals("{")))
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            Collections.reverse(statementTokens);
-            Collections.reverse(seenTokens);
-
-            statementTokens.addAll(tokens.stream()
-                    .takeWhile(t -> !t.getValue().equals(";"))
-                    .collect(Collectors.toCollection(ArrayList::new)));
-
-            int lengthOfVariableDeclaration = 2;
-            boolean variableHasBeenDeclaredInThisStatement = statementTokens.stream()
-                    .takeWhile(t -> !t.getValue().equals("=")).collect(Collectors.toCollection(ArrayList::new)).size() == lengthOfVariableDeclaration;
-
-            String variableType = "";
-            if (variableHasBeenDeclaredInThisStatement) {
-                variableType = seenTokens.get(seenTokens.size()-lengthOfVariableDeclaration).getValue();
-            }
-            String variableName = seenTokens.get(seenTokens.size()-1).getValue();
-            String variableValue = tokens.get(1).getValue();
-
-            ArrayList<Token> rest = tokens.stream().dropWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
-            rest.remove(0);
-
-            AssignmentStatement statement = new AssignmentStatement(token.getLineNumber(), statementTokens)
-                    .withVariableName(variableName).and.withVariableType(variableType).and.withVariableValue(variableValue);
-            statements.add(statement);
-            seenTokens.addAll(statementTokens);
-            return getStatements(rest, statements, seenTokens);
-        }
-
         if (token.getValue().equals(";")) {
             Collections.reverse(seenTokens);
-            ArrayList<Token> thisStatement = seenTokens.stream().takeWhile(t -> !t.getValue().equals(";")).collect(Collectors.toCollection(ArrayList::new));
+            ArrayList<Token> thisStatement = seenTokens.stream().takeWhile(t -> !(t.getValue().equals(";")||t.getValue().equals("{"))).collect(Collectors.toCollection(ArrayList::new));
             Collections.reverse(seenTokens);
             Collections.reverse(thisStatement);
             seenTokens.addAll(thisStatement);

@@ -29,7 +29,7 @@ public class Statement {
 
     @Override
     public String toString() {
-        return "Statement()";
+        return "Statement( " + getTokenString() + " )";
     }
 
     public String getTokenString() {
@@ -45,7 +45,7 @@ public class Statement {
         ArrayList<String> variables = new ArrayList<>();
         for (Token token : tokens) {
             String tokenString = token.getValue();
-            if (tokenString.matches("[A-Za-z0-9]+") && !SourceVersion.isKeyword(tokenString)) {
+            if (tokenString.matches("[A-Za-z0-9]+") && !SourceVersion.isKeyword(tokenString) && !(tokenString.length() == 1 && tokenString.matches("[0-9]"))) {
                 variables.add(tokenString);
             }
         }

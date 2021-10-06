@@ -41,6 +41,6 @@ public class AssignmentStatement extends Statement {
 
     @Override
     public String toString() {
-        return "AssignmentStatement()";
+        return "AssignmentStatement( " + getTokenString() + " )";
     }
 }
