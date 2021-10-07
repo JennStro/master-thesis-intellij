@@ -101,28 +101,39 @@ public class Analyser {
 
     }
 
-    //TODO: Refactor this!
     public ArrayList<MaybeError> getPossibleErrorsOf(ArrayList<Statement>  statements) {
         ArrayList<MaybeError> errors = new ArrayList<>();
         for (Statement statement : statements) {
             if (statement instanceof IfStatement) {
                 ArrayList<Token> statementTokens = statement.getTokens();
-                if (statementTokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains(";")) {
+                if (hasSemiColon(statementTokens)) {
                     ArrayList<Token> dangerArea = statementTokens.stream().takeWhile(t -> !t.getValue().equals("{")).collect(Collectors.toCollection(ArrayList::new));
                     System.out.println(dangerArea);
-                    if (dangerArea.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains(";")) {
-                        if (dangerArea.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).lastIndexOf(";") > dangerArea.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).lastIndexOf(")")) {
+                    if (hasSemiColon(dangerArea)) {
+                        if (semiColonIsAfterParanthesis(dangerArea)) {
                             errors.add(new MaybeError().error(true).type(ErrorType.SEMICOLON_AFTER_IF).onLineNumber(statement.getLineNumber()));
                         }
                     }
                 }
                 ArrayList<Token> expressionTokens = ((IfStatement) statement).getConditionalExpressionTokens();
-                if (expressionTokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("&") || expressionTokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("|")) {
+                if (containsBitwiseOperators(expressionTokens)) {
                     errors.add(new MaybeError().error(true).onLineNumber(statement.getLineNumber()).type(ErrorType.BITWISE_OPERATOR));
                 }
             }
         }
         return errors;
+    }
+
+    private boolean hasSemiColon(ArrayList<Token> tokens) {
+        return tokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains(";");
+    }
+
+    private boolean semiColonIsAfterParanthesis(ArrayList<Token> tokens) {
+        return tokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).lastIndexOf(";") > tokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).lastIndexOf(")");
+    }
+
+    private boolean containsBitwiseOperators(ArrayList<Token> tokens) {
+        return tokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("&") || tokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("|");
     }
 
     public ArrayList<MaybeError> attachAffectedLinesToErrors(ArrayList<MaybeError> errors, ArrayList<String> tokens) {

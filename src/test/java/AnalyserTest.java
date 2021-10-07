@@ -237,12 +237,13 @@ public class AnalyserTest {
     }
 
     @Test
-    public void twoIfStatementsTest() {
+    public void threeIfStatementsTest() {
         String program = "if (true); {} if (false) {} if (true && false)";
         Program statements = analyser.getStatements(analyser.getTokens(program));
         System.out.println(statements);
         System.out.println(statements.getStatements().get(0).getTokenString());
-        //ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(program);
+        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(statements.getStatements());
+        Assertions.assertEquals(1, errors.size());
     }
 
 }
