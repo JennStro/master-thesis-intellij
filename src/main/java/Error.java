@@ -1,20 +1,10 @@
 import java.util.ArrayList;
 
-//TODO: No longer need for MaybeError, can convert to pure error.
-public class MaybeError {
+public class Error {
 
-    private boolean hasError;
     private int lineNumber;
     private ErrorType errorType;
     private ArrayList<Statement> affectedStatementsFromError;
-
-    public boolean isError() {
-        return hasError;
-    }
-
-    public void setHasError(boolean hasError) {
-        this.hasError = hasError;
-    }
 
     public int getLineNumber() {
         return lineNumber;
@@ -32,17 +22,12 @@ public class MaybeError {
         this.errorType = errorType;
     }
 
-    public MaybeError error(boolean hasError) {
-        this.hasError = hasError;
-        return this;
-    }
-
-    public MaybeError onLineNumber(int lineNumber) {
+    public Error onLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
         return this;
     }
 
-    public MaybeError type(ErrorType errorType) {
+    public Error type(ErrorType errorType) {
         this.errorType = errorType;
         return this;
     }
@@ -56,7 +41,7 @@ public class MaybeError {
     }
 
     public String toString() {
-        return "HasError: " + hasError + " Error: " + errorType + " " + " On line: " + lineNumber + " AffectedStatements: " + affectedStatementsFromError;
+        return "HasError: " + errorType + " " + " On line: " + lineNumber + " AffectedStatements: " + affectedStatementsFromError;
     }
     public ArrayList<Integer> getAffectedLines() {
         ArrayList<Integer> lines = new ArrayList<>();

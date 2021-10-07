@@ -101,8 +101,8 @@ public class Analyser {
 
     }
 
-    public ArrayList<MaybeError> getPossibleErrorsOf(ArrayList<Statement>  statements) {
-        ArrayList<MaybeError> errors = new ArrayList<>();
+    public ArrayList<Error> getPossibleErrorsOf(ArrayList<Statement>  statements) {
+        ArrayList<Error> errors = new ArrayList<>();
         for (Statement statement : statements) {
             if (statement instanceof IfStatement) {
                 ArrayList<Token> statementTokens = statement.getTokens();
@@ -111,13 +111,13 @@ public class Analyser {
                     System.out.println(dangerArea);
                     if (hasSemiColon(dangerArea)) {
                         if (semiColonIsAfterParanthesis(dangerArea)) {
-                            errors.add(new MaybeError().error(true).type(ErrorType.SEMICOLON_AFTER_IF).onLineNumber(statement.getLineNumber()));
+                            errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF).onLineNumber(statement.getLineNumber()));
                         }
                     }
                 }
                 ArrayList<Token> expressionTokens = ((IfStatement) statement).getConditionalExpressionTokens();
                 if (containsBitwiseOperators(expressionTokens)) {
-                    errors.add(new MaybeError().error(true).onLineNumber(statement.getLineNumber()).type(ErrorType.BITWISE_OPERATOR));
+                    errors.add(new Error().onLineNumber(statement.getLineNumber()).type(ErrorType.BITWISE_OPERATOR));
                 }
             }
         }
@@ -136,13 +136,12 @@ public class Analyser {
         return tokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("&") || tokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("|");
     }
 
-    public ArrayList<MaybeError> attachAffectedLinesToErrors(ArrayList<MaybeError> errors, ArrayList<String> tokens) {
-        ArrayList<MaybeError> errorsWithAffectedLinesAttached = new ArrayList<>();
-        for (MaybeError error : errors)
-            if (error.isError()) {
-                error.setAffectedStatements(getAffectedStatementsFromError(error, tokens));
-                errorsWithAffectedLinesAttached.add(error);
-            }
+    public ArrayList<Error> attachAffectedLinesToErrors(ArrayList<Error> errors, ArrayList<String> tokens) {
+        ArrayList<Error> errorsWithAffectedLinesAttached = new ArrayList<>();
+        for (Error error : errors) {
+            error.setAffectedStatements(getAffectedStatementsFromError(error, tokens));
+            errorsWithAffectedLinesAttached.add(error);
+        }
         return errorsWithAffectedLinesAttached;
     }
 
@@ -168,7 +167,7 @@ public class Analyser {
         return getAllStatementsContainingVariable(variable, rest, foundStatements);
     }
 
-    private ArrayList<Statement> getAffectedStatementsFromError(MaybeError error, ArrayList<String> tokens) {
+    private ArrayList<Statement> getAffectedStatementsFromError(Error error, ArrayList<String> tokens) {
         ArrayList<Statement> statements = getStatements(tokens).getStatements();
         if (error.getErrorType().equals(ErrorType.SEMICOLON_AFTER_IF)) {
 

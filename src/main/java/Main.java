@@ -63,11 +63,9 @@ public class Main extends AnAction {
                 System.out.println(file.getName());
                 System.out.println(file.getContent());
                 System.out.println(analyser.getTokens(file.getContent()));
-                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(file.getContent())).getStatements()).stream()
-                        .filter(MaybeError::isError)
-                        .collect(Collectors.toCollection(ArrayList::new));
-                ArrayList<MaybeError> errorsWithAffectedLines = analyser.attachAffectedLinesToErrors(errors, analyser.getTokens(file.getContent()));
-                for (MaybeError error : errorsWithAffectedLines) {
+                ArrayList<Error> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(file.getContent())).getStatements());
+                ArrayList<Error> errorsWithAffectedLines = analyser.attachAffectedLinesToErrors(errors, analyser.getTokens(file.getContent()));
+                for (Error error : errorsWithAffectedLines) {
                     Messages.showMessageDialog(project, "OPS: found error on line " + error.getLineNumber(), "An error: " + error.getErrorType(), Messages.getInformationIcon());
 
                     Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();

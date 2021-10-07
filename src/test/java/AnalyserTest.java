@@ -1,12 +1,10 @@
 
-import com.jetbrains.rd.util.Maybe;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class AnalyserTest {
@@ -93,7 +91,7 @@ public class AnalyserTest {
     @Test
     public void shouldFindErrorOnLineThree() {
         String codeWithError = "\n \n if(true);";
-        MaybeError error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0);
+        Error error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0);
         Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
         Assertions.assertEquals(2, error.getLineNumber());
     }
@@ -101,7 +99,7 @@ public class AnalyserTest {
     @Test
     public void shouldFindErrorOnLineThreeNotLastLine() {
         String codeWithError = "\n \n if(true); \n";
-        MaybeError error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0);
+        Error error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0);
         Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
         Assertions.assertEquals(2, error.getLineNumber());
     }
@@ -121,7 +119,7 @@ public class AnalyserTest {
     @Test
     public void usesBitwiseAndOperatorBug() {
         String errorString = "if(true & false)";
-        MaybeError error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(errorString)).getStatements()).get(0);
+        Error error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(errorString)).getStatements()).get(0);
         Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, error.getErrorType());
     }
 
@@ -139,21 +137,21 @@ public class AnalyserTest {
 
     @Test
     public void shouldOnlyGetSemicolonError() {
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true && false); {}")).getStatements());
+        ArrayList<Error> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true && false); {}")).getStatements());
         Assertions.assertEquals(1, errors.size());
         Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, errors.get(0).getErrorType());
     }
 
     @Test
     public void shouldOnlyGetBitwiseOperatorError() {
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true & false) {}")).getStatements());
+        ArrayList<Error> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true & false) {}")).getStatements());
         Assertions.assertEquals(1, errors.size());
         Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, errors.get(0).getErrorType());
     }
 
     @Test
     public void shouldHaveBothSemicolonAndBitwiseOperatorError() {
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true & false); {}")).getStatements());
+        ArrayList<Error> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true & false); {}")).getStatements());
         System.out.println(errors);
         Assertions.assertEquals(2, errors.size());
 
@@ -196,14 +194,14 @@ public class AnalyserTest {
     @Test
     public void getAffectedLinesFromIfError() {
         String program = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;}";
-        ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(program)).getStatements()), analyser.getTokens(program));
+        ArrayList<Error> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(program)).getStatements()), analyser.getTokens(program));
         System.out.println(errors.get(0));
         Assertions.assertEquals(2, errors.get(0).getAffectedLines().size());
         Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0));
         Assertions.assertEquals(3, errors.get(0).getAffectedLines().get(1));
 
         String program2 = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;} assert a == 5;";
-        ArrayList<MaybeError> errors2 = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(program2)).getStatements()), analyser.getTokens(program2));
+        ArrayList<Error> errors2 = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(program2)).getStatements()), analyser.getTokens(program2));
         System.out.println(errors2.get(0));
         Assertions.assertEquals(3, errors2.get(0).getAffectedLines().size());
         Assertions.assertEquals(2, errors2.get(0).getAffectedLines().get(0));
@@ -242,7 +240,7 @@ public class AnalyserTest {
         Program statements = analyser.getStatements(analyser.getTokens(program));
         System.out.println(statements);
         System.out.println(statements.getStatements().get(0).getTokenString());
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(statements.getStatements());
+        ArrayList<Error> errors = analyser.getPossibleErrorsOf(statements.getStatements());
         Assertions.assertEquals(1, errors.size());
     }
 
