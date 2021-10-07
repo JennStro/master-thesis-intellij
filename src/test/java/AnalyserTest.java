@@ -203,16 +203,16 @@ public class AnalyserTest {
         String program = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;}";
         ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
         System.out.println(errors.get(0));
-        Assertions.assertEquals(3, errors.get(0).getAffectedLines().size());
-        Assertions.assertEquals(0, errors.get(0).getAffectedLines().get(0));
-        Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(1));
+        Assertions.assertEquals(2, errors.get(0).getAffectedLines().size());
+        Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0));
+        Assertions.assertEquals(3, errors.get(0).getAffectedLines().get(1));
 
         String program2 = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;} assert a == 5;";
         ArrayList<MaybeError> errors2 = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program2), analyser.getTokens(program2));
         System.out.println(errors2.get(0));
-        Assertions.assertEquals(4, errors2.get(0).getAffectedLines().size());
-        Assertions.assertEquals(0, errors2.get(0).getAffectedLines().get(0));
-        Assertions.assertEquals(3, errors2.get(0).getAffectedLines().get(3));
+        Assertions.assertEquals(3, errors2.get(0).getAffectedLines().size());
+        Assertions.assertEquals(2, errors2.get(0).getAffectedLines().get(0));
+        Assertions.assertEquals(3, errors2.get(0).getAffectedLines().get(2));
 
     }
 
@@ -239,6 +239,15 @@ public class AnalyserTest {
         Assertions.assertEquals(expected, statement.getTokenString());
         Assertions.assertEquals(expectedVariables, statement.getVariables());
         Assertions.assertEquals("Program( Statement( assert a == b ) )", statements.toString());
+    }
+
+    @Test
+    public void twoIfStatementsTest() {
+        String program = "if (true); {} if (false) {} if (true && false)";
+        Program statements = analyser.getStatements(analyser.getTokens(program));
+        System.out.println(statements);
+        System.out.println(statements.getStatements().get(0).getTokenString());
+        //ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(program);
     }
 
 }

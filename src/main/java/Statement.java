@@ -23,8 +23,8 @@ public class Statement {
         return tokens;
     }
 
-    public void setTokens(ArrayList<Token> value) {
-        this.tokens = value;
+    public void setTokens(ArrayList<Token> tokens) {
+        this.tokens = tokens;
     }
 
     @Override

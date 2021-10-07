@@ -206,6 +206,9 @@ public class Analyser {
         }
         Statement statement = statements.get(0);
         if (statement instanceof IfStatement) {
+            if (((IfStatement) statement).getVariablesFromConditionalExpression().contains(variable)) {
+                foundStatements.add(statement);
+            }
             foundStatements.addAll(getAllStatementsContainingVariable(variable, ((IfStatement) statement).getBody(), new ArrayList<>()));
             ArrayList<Statement> rest = new ArrayList<>(statements.subList(1, statements.size()));
             return getAllStatementsContainingVariable(variable, rest, foundStatements);
@@ -234,8 +237,9 @@ public class Analyser {
                     }
 
                     ArrayList<Statement> statementsWithUseOfEffectedVariables = new ArrayList<>();
+                    ArrayList<Statement> statementsAfterIf = statements.stream().filter(st -> st.getLineNumber()>=error.getLineNumber()).collect(Collectors.toCollection(ArrayList::new));
                     for (String variable : variablesToLookFor) {
-                        statementsWithUseOfEffectedVariables.addAll(getAllStatementsContainingVariable(variable, statements, new ArrayList<>()));
+                        statementsWithUseOfEffectedVariables.addAll(getAllStatementsContainingVariable(variable, statementsAfterIf, new ArrayList<>()));
                     }
                     return statementsWithUseOfEffectedVariables;
                 }
@@ -274,12 +278,15 @@ public class Analyser {
                 rest.remove(0);
             }
 
+            ArrayList<Token> thisStatement =  tokens.stream().takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
+
             ArrayList<Token> body = tokens.stream().dropWhile(t -> !t.getValue().equals("{")).takeWhile(t -> !t.getValue().equals("}")).collect(Collectors.toCollection(ArrayList::new));
             ArrayList<Token> expression = getConditionalExpression(tokens);
 
             seenTokens.add(token);
             Program bodyStatements = getStatements(body, new Program(new ArrayList<>()), seenTokens);
-            IfStatement statement = new IfStatement(token.getLineNumber(), expression, bodyStatements.getStatements());
+            IfStatement statement = new IfStatement(token.getLineNumber(), thisStatement)
+                    .withBody(bodyStatements.getStatements()).and.withConditionalExpression(expression);
             statements.add(statement);
             return getStatements(rest, statements, seenTokens);
         }
