@@ -1,4 +1,5 @@
 
+import com.jetbrains.rd.util.Maybe;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
@@ -68,37 +69,41 @@ public class AnalyserTest {
     @Test
     public void shouldFindSemicolonAfterIf() {
         String codeWithError = "if(true);";
-        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isError());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0).getErrorType());
     }
 
     @Test
     public void shouldFindSemiColorAfterIfNestedParanthesis() {
         String codeWithError = "if((true && false) || true);";
-        Assertions.assertTrue(analyser.hasSemicolonAfterIf(codeWithError).isError());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0).getErrorType());
     }
 
     @Test
     public void shouldNotFindSemicolonErrorIfNone() {
         String codeWithNoError = "if(true){ int b = 5; }";
-        Assertions.assertFalse(analyser.hasSemicolonAfterIf(codeWithNoError).isError());
+        Assertions.assertTrue(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithNoError)).getStatements()).isEmpty());
     }
 
     @Test
     public void shouldNotFindSemicolonAfterIf() {
         String codeWithNoError = "if((true && false) || true)";
-        Assertions.assertFalse(analyser.hasSemicolonAfterIf(codeWithNoError).isError());
+        Assertions.assertTrue(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithNoError)).getStatements()).isEmpty());
     }
 
     @Test
     public void shouldFindErrorOnLineThree() {
         String codeWithError = "\n \n if(true);";
-        Assertions.assertEquals(2, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
+        MaybeError error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0);
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
+        Assertions.assertEquals(2, error.getLineNumber());
     }
 
     @Test
     public void shouldFindErrorOnLineThreeNotLastLine() {
         String codeWithError = "\n \n if(true); \n";
-        Assertions.assertEquals(2, analyser.hasSemicolonAfterIf(codeWithError).getLineNumber());
+        MaybeError error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(codeWithError)).getStatements()).get(0);
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
+        Assertions.assertEquals(2, error.getLineNumber());
     }
 
     @Test
@@ -116,52 +121,42 @@ public class AnalyserTest {
     @Test
     public void usesBitwiseAndOperatorBug() {
         String errorString = "if(true & false)";
-        Assertions.assertTrue(this.analyser.usesBitwiseOperator(errorString).isError());
+        MaybeError error = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(errorString)).getStatements()).get(0);
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, error.getErrorType());
     }
 
     @Test
     public void usesAndOperator() {
         String errorString = "if(true && false)";
-        Assertions.assertFalse(this.analyser.usesBitwiseOperator(errorString).isError());
+        Assertions.assertTrue(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(errorString)).getStatements()).isEmpty());
     }
 
     @Test
     public void notMatchingParanthesisGivesNoError() {
         String errorString = "if((true && false)";
-        Assertions.assertFalse(this.analyser.usesBitwiseOperator(errorString).isError());
+        Assertions.assertTrue(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(errorString)).getStatements()).isEmpty());
     }
 
     @Test
-    public void shouldGetListOfErrorsButOnlyHaseSemicolonError() {
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf("if(true && false); {}");
-        HashMap<ErrorType, Boolean> hasErrorOfTypeOf = new HashMap<>();
-        for (MaybeError error : errors) {
-            hasErrorOfTypeOf.put(error.getErrorType(), error.isError());
-        }
-        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.SEMICOLON_AFTER_IF));
-        Assertions.assertFalse(hasErrorOfTypeOf.get(ErrorType.BITWISE_OPERATOR));
+    public void shouldOnlyGetSemicolonError() {
+        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true && false); {}")).getStatements());
+        Assertions.assertEquals(1, errors.size());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, errors.get(0).getErrorType());
     }
 
     @Test
     public void shouldOnlyGetBitwiseOperatorError() {
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf("if(true & false) {}");
-        HashMap<ErrorType, Boolean> hasErrorOfTypeOf = new HashMap<>();
-        for (MaybeError error : errors) {
-            hasErrorOfTypeOf.put(error.getErrorType(), error.isError());
-        }
-        Assertions.assertFalse(hasErrorOfTypeOf.get(ErrorType.SEMICOLON_AFTER_IF));
-        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.BITWISE_OPERATOR));
+        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true & false) {}")).getStatements());
+        Assertions.assertEquals(1, errors.size());
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, errors.get(0).getErrorType());
     }
 
     @Test
     public void shouldHaveBothSemicolonAndBitwiseOperatorError() {
-        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf("if(true & false); {}");
-        HashMap<ErrorType, Boolean> hasErrorOfTypeOf = new HashMap<>();
-        for (MaybeError error : errors) {
-            hasErrorOfTypeOf.put(error.getErrorType(), error.isError());
-        }
-        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.SEMICOLON_AFTER_IF));
-        Assertions.assertTrue(hasErrorOfTypeOf.get(ErrorType.BITWISE_OPERATOR));
+        ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens("if(true & false); {}")).getStatements());
+        System.out.println(errors);
+        Assertions.assertEquals(2, errors.size());
+
     }
 
     @Test
@@ -201,14 +196,14 @@ public class AnalyserTest {
     @Test
     public void getAffectedLinesFromIfError() {
         String program = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;}";
-        ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program), analyser.getTokens(program));
+        ArrayList<MaybeError> errors = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(program)).getStatements()), analyser.getTokens(program));
         System.out.println(errors.get(0));
         Assertions.assertEquals(2, errors.get(0).getAffectedLines().size());
         Assertions.assertEquals(2, errors.get(0).getAffectedLines().get(0));
         Assertions.assertEquals(3, errors.get(0).getAffectedLines().get(1));
 
         String program2 = "int a = 2; \n if(true); \n { a = 5; \n int b = 6;} assert a == 5;";
-        ArrayList<MaybeError> errors2 = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(program2), analyser.getTokens(program2));
+        ArrayList<MaybeError> errors2 = analyser.attachAffectedLinesToErrors(analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(program2)).getStatements()), analyser.getTokens(program2));
         System.out.println(errors2.get(0));
         Assertions.assertEquals(3, errors2.get(0).getAffectedLines().size());
         Assertions.assertEquals(2, errors2.get(0).getAffectedLines().get(0));

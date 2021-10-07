@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 
+//TODO: No longer need for MaybeError, can convert to pure error.
 public class MaybeError {
 
     private boolean hasError;

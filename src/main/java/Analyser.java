@@ -101,92 +101,27 @@ public class Analyser {
 
     }
 
-    public MaybeError hasSemicolonAfterIf(String fileContents) {
-        ArrayList<String> tokens = getTokens(fileContents);
-        String[] dangerPattern = new String[]{"if", "(", ")", ";"};
-        String[] actualPattern = new String[4];
-        Stack<String> paranthesis = new Stack<>();
-        int matchedToken = 0;
-        int lineNumber = 0;
-        for (int i = 0; i < tokens.size(); i++) {
-            String token = tokens.get(i);
-            String predecessor = "";
-            if (i > 0) {
-                predecessor = tokens.get(i-1);
-            }
-            if (token.equals("if")) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-            }
-            if (token.equals("(") && matchedToken == 1) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-                paranthesis.push(token);
-            }
-            if (token.equals("(") && matchedToken > 1) {
-                paranthesis.push(token);
-            }
-            if (token.equals(")") && matchedToken == 2) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-                paranthesis.pop();
-            }
-            if (token.equals(")") && matchedToken > 2) {
-                paranthesis.pop();
-            }
-            if (token.equals(";") && matchedToken == 3 && paranthesis.empty() && predecessor.equals(")")) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-            }
-            boolean hasError = Arrays.equals(dangerPattern, actualPattern);
-            if (hasError) {
-                return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.SEMICOLON_AFTER_IF);
-            }
-            if (token.equals("\n")) {
-                lineNumber += 1;
-            }
-        }
-        return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.SEMICOLON_AFTER_IF);
-    }
-
-    public MaybeError usesBitwiseOperator(String fileContents) {
-        ArrayList<String> tokens = getTokens(fileContents);
-        String[] dangerPattern = new String[]{"if", "(", "&", ")"};
-        String[] actualPattern = new String[4];
-        int matchedToken = 0;
-        int lineNumber = 0;
-        for (String token : tokens) {
-            if (token.equals("if")) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-            }
-            if (token.equals("(") && matchedToken == 1) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-            }
-            if (token.equals("&") && matchedToken == 2) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-            }
-            if (token.equals(")") && matchedToken == 3) {
-                actualPattern[matchedToken] = token;
-                matchedToken += 1;
-            }
-            boolean hasError = Arrays.equals(dangerPattern, actualPattern);
-            if (hasError) {
-                return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.BITWISE_OPERATOR);
-            }
-            if (token.equals("\n")) {
-                lineNumber += 1;
-            }
-        }
-        return new MaybeError().error(Arrays.equals(dangerPattern, actualPattern)).onLineNumber(lineNumber).type(ErrorType.BITWISE_OPERATOR);
-    }
-
-    public ArrayList<MaybeError> getPossibleErrorsOf(String fileContents) {
+    //TODO: Refactor this!
+    public ArrayList<MaybeError> getPossibleErrorsOf(ArrayList<Statement>  statements) {
         ArrayList<MaybeError> errors = new ArrayList<>();
-        errors.add(hasSemicolonAfterIf(fileContents));
-        errors.add(usesBitwiseOperator(fileContents));
+        for (Statement statement : statements) {
+            if (statement instanceof IfStatement) {
+                ArrayList<Token> statementTokens = statement.getTokens();
+                if (statementTokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains(";")) {
+                    ArrayList<Token> dangerArea = statementTokens.stream().takeWhile(t -> !t.getValue().equals("{")).collect(Collectors.toCollection(ArrayList::new));
+                    System.out.println(dangerArea);
+                    if (dangerArea.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains(";")) {
+                        if (dangerArea.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).lastIndexOf(";") > dangerArea.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).lastIndexOf(")")) {
+                            errors.add(new MaybeError().error(true).type(ErrorType.SEMICOLON_AFTER_IF).onLineNumber(statement.getLineNumber()));
+                        }
+                    }
+                }
+                ArrayList<Token> expressionTokens = ((IfStatement) statement).getConditionalExpressionTokens();
+                if (expressionTokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("&") || expressionTokens.stream().map(Token::getValue).collect(Collectors.toCollection(ArrayList::new)).contains("|")) {
+                    errors.add(new MaybeError().error(true).onLineNumber(statement.getLineNumber()).type(ErrorType.BITWISE_OPERATOR));
+                }
+            }
+        }
         return errors;
     }
 

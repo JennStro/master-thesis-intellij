@@ -63,7 +63,7 @@ public class Main extends AnAction {
                 System.out.println(file.getName());
                 System.out.println(file.getContent());
                 System.out.println(analyser.getTokens(file.getContent()));
-                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(file.getContent()).stream()
+                ArrayList<MaybeError> errors = analyser.getPossibleErrorsOf(analyser.getStatements(analyser.getTokens(file.getContent())).getStatements()).stream()
                         .filter(MaybeError::isError)
                         .collect(Collectors.toCollection(ArrayList::new));
                 ArrayList<MaybeError> errorsWithAffectedLines = analyser.attachAffectedLinesToErrors(errors, analyser.getTokens(file.getContent()));
