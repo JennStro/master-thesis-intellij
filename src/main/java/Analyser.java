@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Analyser extends JavaRecursiveElementVisitor {
 
-    private ArrayList<Error> errors;
+    private ArrayList<Error> errors = new ArrayList<>();
 
     public ArrayList<Error> getErrors() {
         return this.errors;
@@ -31,6 +31,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
             System.out.println("Found an empty statement :(");
             System.out.println(statement.getText());
+            this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF));
         }
     }
 
