@@ -12,7 +12,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AnalyserTest extends BasePlatformTestCase {
 
-    Analyser analyser = new Analyser();
+    Analyser analyser;
 
     @BeforeAll
     public void setUp() {
@@ -21,6 +21,11 @@ public class AnalyserTest extends BasePlatformTestCase {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @BeforeEach
+    public void setUpAnalyser() {
+        this.analyser = new Analyser();
     }
 
     @Override
@@ -42,7 +47,7 @@ public class AnalyserTest extends BasePlatformTestCase {
     }
 
     @Test
-    public void simpleIfTest() {
+    public void shouldGetSemicolonAfterIfErrorTest() {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                 "public class Test { " +
                             "public void method() {" +
@@ -55,6 +60,88 @@ public class AnalyserTest extends BasePlatformTestCase {
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0).getErrorType());
+    }
+
+    @Test
+    public void shouldNotGetSemicolonAfterIfErrorTest() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (true) {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertTrue(accepter.getAnalyser().getErrors().isEmpty());
+    }
+
+    @Test
+    public void bitwiseAndOperatorErrorTest() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (true & false) {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(0).getErrorType());
+    }
+
+    @Test
+    public void bitwiseOrOperatorErrorTest() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (true | false) {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(0).getErrorType());
+    }
+
+    @Test
+    public void bitwiseOrOperatorAndSemicolonAfterIfErrorTest() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (true | false); {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertEquals(2, accepter.getAnalyser().getErrors().size());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0).getErrorType());
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(1).getErrorType());
+    }
+
+    @Test
+    public void usesCorrectOperatorsTest() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if ((true || false) && true) {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertTrue( accepter.getAnalyser().getErrors().isEmpty());
     }
 
 

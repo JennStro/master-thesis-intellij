@@ -33,6 +33,23 @@ public class Analyser extends JavaRecursiveElementVisitor {
             System.out.println(statement.getText());
             this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF));
         }
+        String conditionalText = statement.getCondition().getText();
+        if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
+            this.errors.add(new Error().type(ErrorType.BITWISE_OPERATOR));
+        }
+    }
+
+    private boolean hasBitwiseOperator(String text, char bitwiseOperator) {
+        int firstOperator = text.indexOf(bitwiseOperator);
+        if (textContains(firstOperator)) {
+            int secondOperator = text.substring(firstOperator+1).indexOf(bitwiseOperator);
+            return !textContains(secondOperator);
+        }
+        return false;
+    }
+
+    private boolean textContains(int operatorIndex) {
+        return operatorIndex != -1;
     }
 
 }
