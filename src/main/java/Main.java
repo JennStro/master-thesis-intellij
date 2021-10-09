@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Main extends AnAction {
 
@@ -55,7 +56,26 @@ public class Main extends AnAction {
             ArrayList<PsiJavaFile> files = getParsedFiles(project);
             for (PsiJavaFile file : files) {
                 file.accept(new JavaRecursiveElementVisitor() {
+                    @Override
+                    public void visitLocalVariable(PsiLocalVariable variable) {
+                        super.visitLocalVariable(variable);
+                        System.out.println("Found a variable at offset " + variable.getTextRange().getStartOffset());
+                        System.out.println("Variable: " + variable.getName());
+                    }
 
+                    @Override
+                    public void visitIfStatement(PsiIfStatement statement) {
+                        super.visitIfStatement(statement);
+
+                        System.out.println("If-cond: " + Objects.requireNonNull(statement.getCondition()).getText());
+                        System.out.println("If-then: " + statement.getThenBranch());
+                        System.out.println("If-else:" + statement.getElseBranch());
+
+                        if (statement.getThenBranch() instanceof PsiEmptyStatement) {
+                            System.out.println("Found an empty statement :(");
+                            System.out.println(statement.getText());
+                        }
+                    }
                 });
             }
         }
