@@ -1,5 +1,6 @@
 import com.intellij.psi.*;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 public class Analyser extends JavaRecursiveElementVisitor {
@@ -32,6 +33,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
     @Override
     public void visitBinaryExpression(PsiBinaryExpression expression) {
+        super.visitBinaryExpression(expression);
         System.out.println(expression.getText());
         System.out.println(expression.getOperationSign());
         if (expression.getOperationSign().getTokenType().equals(JavaTokenType.EQEQ)) {
@@ -40,6 +42,19 @@ public class Analyser extends JavaRecursiveElementVisitor {
             if (leftExpression.getType().equalsToText("String") && rightExpression.getType().equalsToText("String")) {
                 errors.add(new Error().type(ErrorType.NOT_USING_EQUALS));
             }
+        }
+    }
+
+    //TODO: Store variable with type in visitVariable. Lookup variable to get type.
+    @Override
+    public void visitMethodCallExpression(PsiMethodCallExpression expression) {
+        super.visitMethodCallExpression(expression);
+        System.out.println(expression.getMethodExpression().getText());
+        System.out.println(expression.getMethodExpression().getType());
+        Class clazz = String.class;
+        Method[] methods = clazz.getDeclaredMethods();
+        for (Method method : methods) {
+            System.out.println(method.getReturnType());
         }
     }
 

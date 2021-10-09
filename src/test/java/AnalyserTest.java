@@ -149,9 +149,27 @@ public class AnalyserTest extends BasePlatformTestCase {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                 "public class Test { " +
                             "public void method() {" +
-                                "String myString = \"Hello\"" +
-                                "String myString2 = \"Hello\"" +
+                                "String myString = \"Hello\";" +
+                                "String myString2 = \"Hello\";" +
                                 "if (myString == myString2) {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
+        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, accepter.getAnalyser().getErrors().get(0).getErrorType());
+    }
+
+    @Test
+    public void ignoringReturnValue() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                    "public class Test { " +
+                            "public void method() {" +
+                                "String myString = \"Hello\";" +
+                                "String m = myString.toUpperCase();" +
                             "}" +
                         "}");
         ApplicationManager.getApplication().runReadAction(mockPSIFile);
