@@ -19,6 +19,8 @@ import java.util.Objects;
 
 public class Main extends AnAction {
 
+    private Analyser analyser;
+
     @Override
     public void update(@NotNull AnActionEvent event) {
         System.out.println("Updated");
@@ -29,6 +31,7 @@ public class Main extends AnAction {
             return;
         }
         presentation.setEnabledAndVisible(true);
+        this.analyser = new Analyser();
         System.out.println("Enabled");
     }
 
@@ -55,28 +58,7 @@ public class Main extends AnAction {
         if(project != null) {
             ArrayList<PsiJavaFile> files = getParsedFiles(project);
             for (PsiJavaFile file : files) {
-                file.accept(new JavaRecursiveElementVisitor() {
-                    @Override
-                    public void visitLocalVariable(PsiLocalVariable variable) {
-                        super.visitLocalVariable(variable);
-                        System.out.println("Found a variable at offset " + variable.getTextRange().getStartOffset());
-                        System.out.println("Variable: " + variable.getName());
-                    }
-
-                    @Override
-                    public void visitIfStatement(PsiIfStatement statement) {
-                        super.visitIfStatement(statement);
-
-                        System.out.println("If-cond: " + Objects.requireNonNull(statement.getCondition()).getText());
-                        System.out.println("If-then: " + statement.getThenBranch());
-                        System.out.println("If-else:" + statement.getElseBranch());
-
-                        if (statement.getThenBranch() instanceof PsiEmptyStatement) {
-                            System.out.println("Found an empty statement :(");
-                            System.out.println(statement.getText());
-                        }
-                    }
-                });
+                file.accept(this.analyser);
             }
         }
     }
@@ -92,9 +74,9 @@ public class Main extends AnAction {
         editor.getSelectionModel().selectLineAtCaret();
         editor.getMarkupModel().addLineHighlighter(error.getLineNumber() , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
 
-        for (Integer line : error.getAffectedLines()) {
-            editor.getMarkupModel().addLineHighlighter(line , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
-        }
+        //for (Integer line : error.getAffectedLines()) {
+        //    editor.getMarkupModel().addLineHighlighter(line , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+        //}
         Messages.showMessageDialog(project, "Remove lines", "Errors", Messages.getInformationIcon());
         editor.getMarkupModel().removeAllHighlighters();
     }
