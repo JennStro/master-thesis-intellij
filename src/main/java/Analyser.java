@@ -7,6 +7,7 @@ public class Analyser {
         return getTokens(fileContent, new ArrayList<>());
     }
 
+    //TODO: Need to not do this recursively
     private ArrayList<String> getTokens(String fileContent, ArrayList<String> previousTokens) {
         if (fileContent.length() == 0) {
             return previousTokens;
@@ -99,6 +100,17 @@ public class Analyser {
         }
         return getTokens(fileContent.substring(1), previousTokens);
 
+    }
+
+    public ArrayList<String> getTokensIteratively(String fileContent) {
+        ArrayList<String> tokens = new ArrayList<>();
+        while(!fileContent.isEmpty()) {
+            if (Character.isAlphabetic(fileContent.charAt(0))) {
+
+            }
+            fileContent = fileContent.substring(1);
+        }
+        return tokens;
     }
 
     public ArrayList<Error> getPossibleErrorsOf(ArrayList<Statement>  statements) {

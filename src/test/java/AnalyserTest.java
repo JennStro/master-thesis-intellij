@@ -3,6 +3,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -242,6 +245,18 @@ public class AnalyserTest {
         System.out.println(statements.getStatements().get(0).getTokenString());
         ArrayList<Error> errors = analyser.getPossibleErrorsOf(statements.getStatements());
         Assertions.assertEquals(1, errors.size());
+    }
+
+    @Test
+    public void largeFileTest() {
+        Path fileName = Path.of("/Users/jennystrommen/IdeaProjects/master/src/test/resources/program.txt");
+        String fileContent = "";
+        try {
+            fileContent = Files.readString(fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //ArrayList<String> tokens = analyser.getTokensIteratively(fileContent);
     }
 
 }

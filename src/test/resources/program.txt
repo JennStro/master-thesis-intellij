@@ -1,0 +1,138 @@
+public class Computer implements IComputer {
+
+    //Store the height and width of the computers board
+    private int height;
+    private int width;
+
+    //Get the computerboard and the playerboard
+    private IBoard computerBoard;
+    private IBoard playerBoard;
+
+    //Store the list of all ships to be placed on board
+    private List<IShip> shipList;
+
+
+    public Computer(IBoard playerBoard, IBoard computerBoard) {
+        this.height = computerBoard.getHeight();
+        this.width = computerBoard.getWidth();
+        this.computerBoard = computerBoard;
+        this.playerBoard = playerBoard;
+        // Store list
+        shipList = createShips();
+    }
+
+    @Override
+    public List<IShip> createShips() {
+        List<IShip> list = new ArrayList<IShip>();
+        list.add(new BattleShip());
+        list.add(new Carrier());
+        list.add(new Destroyer());
+        list.add(new PatrolBoat());
+        list.add(new Submarine());
+        return list;
+    }
+
+    @Override
+    public int getX() {
+        return generateNumber(width);
+    }
+
+    @Override
+    public int getY() {
+        return generateNumber(height);
+    }
+
+    @Override
+    public Direction getDirection() {
+        switch(generateNumber(4)) {
+            case 0: {
+                return Direction.DOWN;
+            }
+            case 1: {
+                return Direction.UP;
+            }
+            case 2: {
+                return Direction.LEFT;
+            }
+            case 3: {
+                return Direction.RIGHT;
+            }
+            default:
+                return null;
+        }
+
+    }
+
+    @Override
+    public int generateNumber(int n) {
+        Random random = new Random();
+        return random.nextInt(n);
+    }
+
+    @Override
+    public void placeShips() {
+        for (int i = 0; i < shipList.size(); i++) {
+            computerBoard.set(shipList.get(i), getX(), getY(), shipList.get(i).getSize(), getDirection());
+            // Retry placement until it happens
+            while (computerBoard.shipNotAdded()) {
+                computerBoard.set(shipList.get(i), getX(), getY(), shipList.get(i).getSize(), getDirection());
+            }
+        }
+
+    }
+
+    @Override
+    public void placeBomb() {
+        int x = getX();
+        int y = getY();
+
+        if (playerBoard.isHit()) {
+            int increaseX = playerBoard.getHitX() + 1;
+            int decreaseX = playerBoard.getHitX() - 1;
+            int increaseY = playerBoard.getHitY() + 1;
+            int decreaseY = playerBoard.getHitY() - 1;
+            if (increaseX < playerBoard.getWidth()) {
+                x = increaseX;
+                y = playerBoard.getHitY();
+            }
+
+//				else if (increaseY < playerBoard.getHeight()) {
+//				y = increaseY;
+//			} else if (decreaseX >= 0) {
+//				x = decreaseX;
+//			} else {
+//				y = decreaseY;
+        }
+
+        HitBomb hitBomb = new HitBomb();
+        Bomb bomb = new Bomb();
+        playerBoard.setBomb(x, y, hitBomb, bomb);
+        System.out.println(playerBoard.getHitX());
+        //Retry placement with new coordinates until bomb is added
+        while (playerBoard.bombNotAdded()) {
+            playerBoard.setBomb(getX(), getY(), hitBomb, bomb);
+        }
+    }
+
+    @Override
+    public void placeBomb(int x, int y) {
+        if (playerBoard.isHit()) {
+            int increaseX = playerBoard.getHitX() + 1;
+            int decreaseX = playerBoard.getHitX() - 1;
+            int increaseY = playerBoard.getHitY() + 1;
+            int decreaseY = playerBoard.getHitY() - 1;
+            if (increaseX < playerBoard.getWidth()) {
+                x = increaseX;
+            }
+        }
+        HitBomb hitBomb = new HitBomb();
+        Bomb bomb = new Bomb();
+        playerBoard.setBomb(x, y, hitBomb, bomb);
+        //Retry placement until bomb is added
+        while (playerBoard.bombNotAdded()) {
+            placeBomb();
+        }
+
+    }
+
+}
