@@ -1,7 +1,4 @@
-import com.intellij.psi.JavaRecursiveElementVisitor;
-import com.intellij.psi.PsiEmptyStatement;
-import com.intellij.psi.PsiIfStatement;
-import com.intellij.psi.PsiLocalVariable;
+import com.intellij.psi.*;
 
 import java.util.*;
 
@@ -24,18 +21,25 @@ public class Analyser extends JavaRecursiveElementVisitor {
     public void visitIfStatement(PsiIfStatement statement) {
         super.visitIfStatement(statement);
 
-        System.out.println("If-cond: " + Objects.requireNonNull(statement.getCondition()).getText());
-        System.out.println("If-then: " + statement.getThenBranch());
-        System.out.println("If-else:" + statement.getElseBranch());
-
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
-            System.out.println("Found an empty statement :(");
-            System.out.println(statement.getText());
             this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF));
         }
         String conditionalText = statement.getCondition().getText();
         if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
             this.errors.add(new Error().type(ErrorType.BITWISE_OPERATOR));
+        }
+    }
+
+    @Override
+    public void visitBinaryExpression(PsiBinaryExpression expression) {
+        System.out.println(expression.getText());
+        System.out.println(expression.getOperationSign());
+        if (expression.getOperationSign().getTokenType().equals(JavaTokenType.EQEQ)) {
+            PsiExpression leftExpression = expression.getLOperand();
+            PsiExpression rightExpression = expression.getROperand();
+            if (leftExpression.getType().equalsToText("String") && rightExpression.getType().equalsToText("String")) {
+                errors.add(new Error().type(ErrorType.NOT_USING_EQUALS));
+            }
         }
     }
 
