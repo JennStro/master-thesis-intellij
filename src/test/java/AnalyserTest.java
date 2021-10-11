@@ -164,7 +164,7 @@ public class AnalyserTest extends BasePlatformTestCase {
     }
 
     @Test
-    public void ignoringReturnValue() {
+    public void notIgnoringReturnValue() {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                     "public class Test { " +
                             "public void method() {" +
@@ -177,8 +177,24 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertTrue( accepter.getAnalyser().getErrors().isEmpty());
+    }
+
+    @Test
+    public void ignoringReturnValue() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "String myString = \"Hello\";" +
+                                "myString.toUpperCase();" +
+                             "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
-        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
 }

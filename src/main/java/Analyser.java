@@ -2,10 +2,13 @@ import com.intellij.psi.*;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Analyser extends JavaRecursiveElementVisitor {
 
     private ArrayList<Error> errors = new ArrayList<>();
+    private HashMap<String, PsiType> context = new HashMap<>();
+    private HashSet<String> assignedMethodCalls = new HashSet<>();
 
     public ArrayList<Error> getErrors() {
         return this.errors;
@@ -14,8 +17,19 @@ public class Analyser extends JavaRecursiveElementVisitor {
     @Override
     public void visitLocalVariable(PsiLocalVariable variable) {
         super.visitLocalVariable(variable);
-        System.out.println("Found a variable at offset " + variable.getTextRange().getStartOffset());
-        System.out.println("Variable: " + variable.getName());
+        context.put(variable.getName(), variable.getType());
+    }
+
+    @Override
+    public void visitDeclarationStatement(PsiDeclarationStatement statement) {
+        super.visitDeclarationStatement(statement);
+        System.out.println("DECLS: "+Arrays.toString(statement.getDeclaredElements()));
+    }
+
+    @Override
+    public void visitAssignmentExpression(PsiAssignmentExpression expression) {
+        super.visitAssignmentExpression(expression);
+        System.out.println("Assign "+expression.getRExpression().getText());
     }
 
     @Override
@@ -34,8 +48,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
     @Override
     public void visitBinaryExpression(PsiBinaryExpression expression) {
         super.visitBinaryExpression(expression);
-        System.out.println(expression.getText());
-        System.out.println(expression.getOperationSign());
         if (expression.getOperationSign().getTokenType().equals(JavaTokenType.EQEQ)) {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
@@ -45,17 +57,39 @@ public class Analyser extends JavaRecursiveElementVisitor {
         }
     }
 
-    //TODO: Store variable with type in visitVariable. Lookup variable to get type.
     @Override
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
         super.visitMethodCallExpression(expression);
-        System.out.println(expression.getMethodExpression().getText());
+        System.out.println("Methodcall: " +expression.getMethodExpression().getText());
+        System.out.println("MethodcallW: " +expression.getText());
         System.out.println(expression.getMethodExpression().getType());
-        Class clazz = String.class;
-        Method[] methods = clazz.getDeclaredMethods();
-        for (Method method : methods) {
-            System.out.println(method.getReturnType());
+        System.out.println("Resolve: " +expression.resolveMethod());
+        System.out.println("PRENT " + expression.getParent().getText());
+        System.out.println("PARENT " + expression.getParent());
+
+        if (expression.getMethodExpression().getType() == null && !(expression.getParent() instanceof PsiLocalVariable)) {
+            String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
+                    .dropWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining()).substring(1);
+            String containingClass = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
+                    .takeWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining());
+
+            if (context.containsKey(containingClass) && context.get(containingClass).equalsToText("String")) {
+                try {
+                    Method method = getStringMethod(methodName);
+                    if (!method.getReturnType().getName().equals("Void")) {
+                         errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE));
+                    }
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                }
+            }
         }
+
+    }
+
+    private Method getStringMethod(String methodName) throws NoSuchMethodException {
+        Class<String> clazz = String.class;
+        return clazz.getMethod(methodName, (Class<?>[]) null);
     }
 
     private boolean hasBitwiseOperator(String text, char bitwiseOperator) {
