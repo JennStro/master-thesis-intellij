@@ -8,6 +8,10 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
     private ArrayList<Error> errors = new ArrayList<>();
     private HashMap<String, PsiType> context = new HashMap<>();
+    private HashMap<String, String> fullyQualifiedName = new HashMap<>(Map.of(
+            "ArrayList", "java.util.ArrayList",
+            "String", "java.lang.String"
+    ));
 
     public ArrayList<Error> getErrors() {
         return this.errors;
@@ -17,6 +21,11 @@ public class Analyser extends JavaRecursiveElementVisitor {
     public void visitLocalVariable(PsiLocalVariable variable) {
         super.visitLocalVariable(variable);
         context.put(variable.getName(), variable.getType());
+    }
+
+    @Override
+    public void visitImportList(PsiImportList list) {
+        System.out.println(list.getText());
     }
 
     @Override
@@ -51,30 +60,35 @@ public class Analyser extends JavaRecursiveElementVisitor {
         if (expression.getMethodExpression().getType() == null && !(expression.getParent() instanceof PsiLocalVariable)) {
             String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .dropWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining()).substring(1);
-            String containingClass = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
+            String containingClassString = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .takeWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining());
 
-            if (typeOfContainingClassIs("String", containingClass)) {
-                try {
-                    Method method = getStringMethod(methodName);
-                    boolean methodReturnsVoid = method.getReturnType().getName().equals("Void");
-                    if (!methodReturnsVoid) {
-                         errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE));
+            String typeOfContainingClass = fullyQualifiedName.get(context.get(containingClassString).getCanonicalText()
+                    .chars().mapToObj(it -> (char) it)
+                    .takeWhile(it -> it != '<')
+                    .map(Object::toString).collect(Collectors.joining()));
+
+            try {
+                Class<?> containingClass = Class.forName(typeOfContainingClass);
+
+                if (expression.getArgumentList().isEmpty()) {
+                    try {
+                        Method method = containingClass.getMethod(methodName, (Class<?>[]) null);
+                        boolean methodReturnsVoid = method.getReturnType().getName().equals("Void");
+                        if (!methodReturnsVoid) {
+                            errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE));
+                        }
+                    } catch (NoSuchMethodException e) {
+                        e.printStackTrace();
                     }
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
                 }
+
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
+
+
         }
-    }
-
-    private boolean typeOfContainingClassIs(String type, String containingClass) {
-        return this.context.containsKey(containingClass) && this.context.get(containingClass).equalsToText(type);
-    }
-
-    private Method getStringMethod(String methodName) throws NoSuchMethodException {
-        Class<String> clazz = String.class;
-        return clazz.getMethod(methodName, (Class<?>[]) null);
     }
 
     private boolean hasBitwiseOperator(String text, char bitwiseOperator) {

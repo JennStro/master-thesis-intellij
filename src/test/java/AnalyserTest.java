@@ -9,6 +9,8 @@ import com.intellij.util.lang.JavaVersion;
 import org.junit.jupiter.api.*;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
+import java.util.ArrayList;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AnalyserTest extends BasePlatformTestCase {
 
@@ -188,6 +190,43 @@ public class AnalyserTest extends BasePlatformTestCase {
                                 "String myString = \"Hello\";" +
                                 "myString.toUpperCase();" +
                              "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
+        Assertions.assertEquals( 1, accepter.getAnalyser().getErrors().size());
+        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
+    }
+
+    @Test
+    public void ignoringReturnValueButCallingOnVoidMethod() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "ints.add(1);" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertTrue( accepter.getAnalyser().getErrors().isEmpty());
+    }
+
+    @Test
+    public void ignoringReturnValueWhenCallingArrayListMethod() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "import java.util.ArrayList;" +
+                        "public class Test { " +
+                            "public void method() {" +
+                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "ints.toString();" +
+                            "}" +
                         "}");
         ApplicationManager.getApplication().runReadAction(mockPSIFile);
         PsiJavaFile file = mockPSIFile.getFile();
