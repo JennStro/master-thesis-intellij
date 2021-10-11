@@ -54,10 +54,11 @@ public class Analyser extends JavaRecursiveElementVisitor {
             String containingClass = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .takeWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining());
 
-            if (context.containsKey(containingClass) && context.get(containingClass).equalsToText("String")) {
+            if (typeOfContainingClassIs("String", containingClass)) {
                 try {
                     Method method = getStringMethod(methodName);
-                    if (!method.getReturnType().getName().equals("Void")) {
+                    boolean methodReturnsVoid = method.getReturnType().getName().equals("Void");
+                    if (!methodReturnsVoid) {
                          errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE));
                     }
                 } catch (NoSuchMethodException e) {
@@ -65,7 +66,10 @@ public class Analyser extends JavaRecursiveElementVisitor {
                 }
             }
         }
+    }
 
+    private boolean typeOfContainingClassIs(String type, String containingClass) {
+        return this.context.containsKey(containingClass) && this.context.get(containingClass).equalsToText(type);
     }
 
     private Method getStringMethod(String methodName) throws NoSuchMethodException {
