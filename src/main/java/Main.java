@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class Main extends AnAction {
 
@@ -57,22 +56,32 @@ public class Main extends AnAction {
         Project project = e.getProject();
         if(project != null) {
             ArrayList<PsiJavaFile> files = getParsedFiles(project);
+
             for (PsiJavaFile file : files) {
                 file.accept(this.analyser);
+
+                for (Error error : this.analyser.getErrors()) {
+                    Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType(), "", Messages.getInformationIcon());
+
+                    if (error.getOffset() != -1) {
+                        int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
+                        Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType() + " On line " + lineNumber, "", Messages.getInformationIcon());
+                    }
+                }
             }
         }
     }
 
     private void HandleError(Error error, Project project) {
-        Messages.showMessageDialog(project, "OPS: found error on line " + error.getLineNumber(), "An error: " + error.getErrorType(), Messages.getInformationIcon());
+        Messages.showMessageDialog(project, "OPS: found error on line " + error.getOffset(), "An error: " + error.getErrorType(), Messages.getInformationIcon());
 
         Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
         CaretModel caretModel = editor.getCaretModel();
-        caretModel.moveToLogicalPosition(new LogicalPosition(error.getLineNumber(), 0));
+        caretModel.moveToLogicalPosition(new LogicalPosition(error.getOffset(), 0));
         ScrollingModel scrollingModel = editor.getScrollingModel();
         scrollingModel.scrollToCaret(ScrollType.CENTER);
         editor.getSelectionModel().selectLineAtCaret();
-        editor.getMarkupModel().addLineHighlighter(error.getLineNumber() , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+        editor.getMarkupModel().addLineHighlighter(error.getOffset() , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
 
         //for (Integer line : error.getAffectedLines()) {
         //    editor.getMarkupModel().addLineHighlighter(line , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));

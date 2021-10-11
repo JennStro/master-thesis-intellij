@@ -33,7 +33,8 @@ public class Analyser extends JavaRecursiveElementVisitor {
         super.visitIfStatement(statement);
 
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
-            this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF));
+            int offset = statement.getTextOffset();
+            this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF).onOffset(offset));
         }
         String conditionalText = statement.getCondition().getText();
         if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
@@ -48,7 +49,8 @@ public class Analyser extends JavaRecursiveElementVisitor {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
             if (leftExpression.getType().equalsToText("String") && rightExpression.getType().equalsToText("String")) {
-                errors.add(new Error().type(ErrorType.NOT_USING_EQUALS));
+                int offset = expression.getTextOffset();
+                errors.add(new Error().type(ErrorType.NOT_USING_EQUALS).onOffset(offset));
             }
         }
     }

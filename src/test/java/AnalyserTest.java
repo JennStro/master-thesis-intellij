@@ -1,5 +1,4 @@
 
-import com.intellij.lang.Language;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiJavaFile;
@@ -8,8 +7,6 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.util.lang.JavaVersion;
 import org.junit.jupiter.api.*;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
-
-import java.util.ArrayList;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AnalyserTest extends BasePlatformTestCase {
@@ -236,6 +233,25 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
         Assertions.assertEquals( 1, accepter.getAnalyser().getErrors().size());
         Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
+    }
+
+    @Test
+    public void findsErrorOnLineNumberFive() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "String myString = \"Hello\";" +
+                                "String myString2 = \"Hello\";" +
+                                "if (myString == myString2) {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertEquals(99, accepter.getAnalyser().getErrors().get(0).getOffset());
+
     }
 
 }

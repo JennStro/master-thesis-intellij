@@ -1,16 +1,14 @@
-import java.util.ArrayList;
-
 public class Error {
 
-    private int lineNumber;
+    private int offset = -1;
     private ErrorType errorType;
 
-    public int getLineNumber() {
-        return lineNumber;
+    public int getOffset() {
+        return offset;
     }
 
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     public ErrorType getErrorType() {
@@ -21,8 +19,8 @@ public class Error {
         this.errorType = errorType;
     }
 
-    public Error onLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
+    public Error onOffset(int offset) {
+        this.offset = offset;
         return this;
     }
 
@@ -32,7 +30,7 @@ public class Error {
     }
 
     public String toString() {
-        return "HasError: " + errorType + " " + " On line: " + lineNumber;
+        return "HasError: " + errorType + " " + " On line: " + offset;
     }
 
 }
