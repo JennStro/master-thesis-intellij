@@ -195,6 +195,8 @@ public class AnalyserTest extends BasePlatformTestCase {
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
+        Assertions.assertEquals( 1, accepter.getAnalyser().getErrors().size());
+        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
 }

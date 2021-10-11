@@ -8,7 +8,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
     private ArrayList<Error> errors = new ArrayList<>();
     private HashMap<String, PsiType> context = new HashMap<>();
-    private HashSet<String> assignedMethodCalls = new HashSet<>();
 
     public ArrayList<Error> getErrors() {
         return this.errors;
@@ -18,18 +17,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
     public void visitLocalVariable(PsiLocalVariable variable) {
         super.visitLocalVariable(variable);
         context.put(variable.getName(), variable.getType());
-    }
-
-    @Override
-    public void visitDeclarationStatement(PsiDeclarationStatement statement) {
-        super.visitDeclarationStatement(statement);
-        System.out.println("DECLS: "+Arrays.toString(statement.getDeclaredElements()));
-    }
-
-    @Override
-    public void visitAssignmentExpression(PsiAssignmentExpression expression) {
-        super.visitAssignmentExpression(expression);
-        System.out.println("Assign "+expression.getRExpression().getText());
     }
 
     @Override
@@ -60,12 +47,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
     @Override
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
         super.visitMethodCallExpression(expression);
-        System.out.println("Methodcall: " +expression.getMethodExpression().getText());
-        System.out.println("MethodcallW: " +expression.getText());
-        System.out.println(expression.getMethodExpression().getType());
-        System.out.println("Resolve: " +expression.resolveMethod());
-        System.out.println("PRENT " + expression.getParent().getText());
-        System.out.println("PARENT " + expression.getParent());
 
         if (expression.getMethodExpression().getType() == null && !(expression.getParent() instanceof PsiLocalVariable)) {
             String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
