@@ -2,6 +2,7 @@ public class Error {
 
     private int offset = -1;
     private ErrorType errorType;
+    private String codeThatHasCausedTheError;
 
     public int getOffset() {
         return offset;
@@ -29,8 +30,17 @@ public class Error {
         return this;
     }
 
+    public Error causedBy(String code) {
+        this.codeThatHasCausedTheError = code;
+        return this;
+    }
+
     public String toString() {
         return "HasError: " + errorType + " " + " On line: " + offset;
+    }
+
+    public String getCodeThatCausedTheError() {
+        return this.codeThatHasCausedTheError;
     }
 
 }

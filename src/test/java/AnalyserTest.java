@@ -8,6 +8,8 @@ import com.intellij.util.lang.JavaVersion;
 import org.junit.jupiter.api.*;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
+import java.util.ArrayList;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AnalyserTest extends BasePlatformTestCase {
 
@@ -252,6 +254,48 @@ public class AnalyserTest extends BasePlatformTestCase {
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertEquals(99, accepter.getAnalyser().getErrors().get(0).getOffset());
 
+    }
+
+    @Test
+    public void findsIfErrorAndIgnoringReturnValueError() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "String myString = \"Hello\";" +
+                                "String myString2 = \"Hello\";" +
+                                "myString2.toUpperCase();" +
+                                "if (myString.charAt(0) == myString2.charAt(0)); {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        Assertions.assertEquals(2, errors.size());
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getErrorType());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, errors.get(1).getErrorType());
+    }
+
+    @Test
+    public void ignoringReturnWithArgument() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "String myString = \"Hello\";" +
+                                "String myString2 = \"Hello\";" +
+                                "myString2.concat(myString);" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        Assertions.assertEquals(1, errors.size());
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getErrorType());
     }
 
 }

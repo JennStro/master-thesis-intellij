@@ -38,21 +38,33 @@ public class Analyser extends JavaRecursiveElementVisitor {
         }
         String conditionalText = statement.getCondition().getText();
         if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
-            this.errors.add(new Error().type(ErrorType.BITWISE_OPERATOR));
+            int offset = statement.getTextOffset();
+            this.errors.add(new Error().type(ErrorType.BITWISE_OPERATOR).onOffset(offset));
         }
     }
 
     @Override
     public void visitBinaryExpression(PsiBinaryExpression expression) {
         super.visitBinaryExpression(expression);
-        if (expression.getOperationSign().getTokenType().equals(JavaTokenType.EQEQ)) {
+        if (usesDoubleEqualSign(expression)) {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
-            if (leftExpression.getType().equalsToText("String") && rightExpression.getType().equalsToText("String")) {
+            if (bothExpressionsAreStrings(leftExpression, rightExpression)) {
                 int offset = expression.getTextOffset();
                 errors.add(new Error().type(ErrorType.NOT_USING_EQUALS).onOffset(offset));
             }
         }
+    }
+
+    private boolean usesDoubleEqualSign(PsiBinaryExpression expression) {
+        return expression.getOperationSign().getTokenType().equals(JavaTokenType.EQEQ);
+    }
+
+    private boolean bothExpressionsAreStrings(PsiExpression left, PsiExpression right) {
+        if (left != null && right != null && left.getType() != null && right.getType() != null) {
+            return left.getType().equalsToText("String") && right.getType().equalsToText("String");
+        }
+        return false;
     }
 
     @Override
@@ -65,10 +77,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
             String containingClassString = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .takeWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining());
 
-            String typeOfContainingClass = fullyQualifiedName.get(context.get(containingClassString).getCanonicalText()
-                    .chars().mapToObj(it -> (char) it)
-                    .takeWhile(it -> it != '<')
-                    .map(Object::toString).collect(Collectors.joining()));
+            String typeOfContainingClass = fullyQualifiedNameOf(containingClassString);
 
             try {
                 Class<?> containingClass = Class.forName(typeOfContainingClass);
@@ -78,10 +87,18 @@ public class Analyser extends JavaRecursiveElementVisitor {
                         Method method = containingClass.getMethod(methodName, (Class<?>[]) null);
                         boolean methodReturnsVoid = method.getReturnType().getName().equals("Void");
                         if (!methodReturnsVoid) {
-                            errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE));
+                            int offset = expression.getTextOffset();
+                            errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE).onOffset(offset));
                         }
                     } catch (NoSuchMethodException e) {
                         e.printStackTrace();
+                    }
+                } else {
+                    PsiExpressionList argumentList = expression.getArgumentList();
+                    Class<?>[] argumentListTypes = new Class[argumentList.getExpressionCount()];
+                    for (PsiType exprType : argumentList.getExpressionTypes()) {
+                        System.out.println("TYPE "+ exprType.toString());
+                        System.out.println(fullyQualifiedNameOf(exprType));
                     }
                 }
 
@@ -91,6 +108,24 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
 
         }
+    }
+
+    private String fullyQualifiedNameOf(PsiType type) {
+        return this.fullyQualifiedName.get(
+                type.getCanonicalText()
+                .chars().mapToObj(it -> (char) it)
+                .takeWhile(it -> it != '<')
+                .map(Object::toString).collect(Collectors.joining())
+        );
+    }
+
+    private String fullyQualifiedNameOf(String variableName) {
+        return this.fullyQualifiedName.get(
+                this.context.get(variableName).getCanonicalText()
+                .chars().mapToObj(it -> (char) it)
+                .takeWhile(it -> it != '<')
+                .map(Object::toString).collect(Collectors.joining())
+        );
     }
 
     private boolean hasBitwiseOperator(String text, char bitwiseOperator) {
