@@ -42,12 +42,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
         if (usesDoubleEqualSign(expression)) {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
-            System.out.println(leftExpression);
-            System.out.println(rightExpression);
-            System.out.println(rightExpression.getType());
-            System.out.println(leftExpression.getType());
             if (bothExpressionsAreStrings(leftExpression, rightExpression)) {
-                System.out.println("Im here!");
                 int offset = expression.getTextOffset();
                 errors.add(new Error().type(ErrorType.NOT_USING_EQUALS).onOffset(offset));
             }
