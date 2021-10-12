@@ -201,7 +201,7 @@ public class AnalyserTest extends BasePlatformTestCase {
     }
 
     @Test
-    public void ignoringReturnValueButCallingOnVoidMethod() {
+    public void ignoringReturnValueButCallingOnOftenUsedAsVoidMethod() {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                 "public class Test { " +
                             "public void method() {" +

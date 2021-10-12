@@ -71,7 +71,14 @@ public class Analyser extends JavaRecursiveElementVisitor {
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
         super.visitMethodCallExpression(expression);
 
-        if (expression.getMethodExpression().getType() == null && !(expression.getParent() instanceof PsiLocalVariable)) {
+        System.out.println("EXXPR: " + expression.getText());
+        System.out.println("EXPR PARE:" + expression.getParent().getText());
+        String parentString = expression.getText() + ";";
+        System.out.println(parentString.equals(expression.getParent().getText()));
+        System.out.println(expression.getParent().toString());
+
+
+        if (expression.getMethodExpression().getType() == null && parentString.equals(expression.getParent().getText())) {
             String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .dropWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining()).substring(1);
             String containingClassString = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
@@ -85,7 +92,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
                 if (expression.getArgumentList().isEmpty()) {
                     try {
                         Method method = containingClass.getMethod(methodName, (Class<?>[]) null);
-                        boolean methodReturnsVoid = method.getReturnType().getName().equals("Void");
+                        boolean methodReturnsVoid = method.getReturnType().getName().equals("void");
                         if (!methodReturnsVoid) {
                             int offset = expression.getTextOffset();
                             errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE).onOffset(offset));
@@ -94,11 +101,17 @@ public class Analyser extends JavaRecursiveElementVisitor {
                         e.printStackTrace();
                     }
                 } else {
-                    PsiExpressionList argumentList = expression.getArgumentList();
-                    Class<?>[] argumentListTypes = new Class[argumentList.getExpressionCount()];
-                    for (PsiType exprType : argumentList.getExpressionTypes()) {
-                        System.out.println("TYPE "+ exprType.toString());
-                        System.out.println(fullyQualifiedNameOf(exprType));
+                    for (Method candidate : containingClass.getDeclaredMethods()) {
+                        if (candidate.getName().equals(methodName)) {
+                            System.out.println(candidate.getName());
+                            System.out.println(candidate.getReturnType().getName());
+                            System.out.println(expression.getParent().getText());
+                            System.out.println(expression.getParent().getParent().getText());
+                        }
+                        if (candidate.getName().equals(methodName) && !candidate.getReturnType().getName().equals("void") && !candidate.getReturnType().getName().equals("boolean")) {
+                            int offset = expression.getTextOffset();
+                            errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE).onOffset(offset));
+                        }
                     }
                 }
 
