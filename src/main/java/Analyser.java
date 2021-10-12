@@ -66,7 +66,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
         super.visitMethodCallExpression(expression);
 
-        if (!parentUses(expression)) {
+        if (expression.getText().contains(".") && !parentUses(expression)) {
             String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .dropWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining()).substring(1);
             String containingClassString = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)

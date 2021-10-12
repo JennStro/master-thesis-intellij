@@ -374,4 +374,25 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("true | false", error.getCodeThatCausedTheError());
     }
 
+    @Test
+    public void callingLocalMethod() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "import java.util.ArrayList;" +
+                        "public class Test { " +
+                            "public void method() {" +
+                                "ArrayList<Integer> ints = new ArrayList();" +
+                            "}" +
+
+                            "public void methodCaller() {" +
+                                "method();" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertTrue( accepter.getAnalyser().getErrors().isEmpty());
+    }
+
 }
