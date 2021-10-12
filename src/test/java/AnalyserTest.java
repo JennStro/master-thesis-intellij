@@ -395,4 +395,22 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertTrue( accepter.getAnalyser().getErrors().isEmpty());
     }
 
+    @Test
+    public void findsIfErrorWhenUsingInlineStringInIfCondition() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (\"hei\" == \"hei2\") {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        Assertions.assertEquals(1, errors.size());
+        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, errors.get(0).getErrorType());
+    }
+
 }

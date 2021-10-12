@@ -19,14 +19,12 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
     @Override
     public void visitLocalVariable(PsiLocalVariable variable) {
-        super.visitLocalVariable(variable);
         context.put(variable.getName(), variable.getType());
+        super.visitLocalVariable(variable);
     }
 
     @Override
     public void visitIfStatement(PsiIfStatement statement) {
-        super.visitIfStatement(statement);
-
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
             int offset = statement.getTextOffset();
             this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF).onOffset(offset).causedBy(statement.getText()));
@@ -36,19 +34,25 @@ public class Analyser extends JavaRecursiveElementVisitor {
             int offset = statement.getTextOffset();
             this.errors.add(new Error().type(ErrorType.BITWISE_OPERATOR).onOffset(offset).causedBy(statement.getCondition().getText()));
         }
+        super.visitIfStatement(statement);
     }
 
     @Override
     public void visitBinaryExpression(PsiBinaryExpression expression) {
-        super.visitBinaryExpression(expression);
         if (usesDoubleEqualSign(expression)) {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
+            System.out.println(leftExpression);
+            System.out.println(rightExpression);
+            System.out.println(rightExpression.getType());
+            System.out.println(leftExpression.getType());
             if (bothExpressionsAreStrings(leftExpression, rightExpression)) {
+                System.out.println("Im here!");
                 int offset = expression.getTextOffset();
                 errors.add(new Error().type(ErrorType.NOT_USING_EQUALS).onOffset(offset));
             }
         }
+        super.visitBinaryExpression(expression);
     }
 
     private boolean usesDoubleEqualSign(PsiBinaryExpression expression) {
@@ -57,14 +61,20 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
     private boolean bothExpressionsAreStrings(PsiExpression left, PsiExpression right) {
         if (left != null && right != null && left.getType() != null && right.getType() != null) {
-            return left.getType().equalsToText("String") && right.getType().equalsToText("String");
+            return left.getType().equalsToText(getTypeOfString(left)) && right.getType().equalsToText(getTypeOfString(right));
         }
         return false;
     }
 
+    private String getTypeOfString(PsiExpression expr) {
+        if (expr instanceof PsiLiteralExpression) {
+            return "java.lang.String";
+        }
+        return "String";
+    }
+
     @Override
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
-        super.visitMethodCallExpression(expression);
 
         if (expression.getText().contains(".") && !parentUses(expression)) {
             String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
@@ -103,6 +113,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
 
         }
+        super.visitMethodCallExpression(expression);
     }
 
     private boolean parentUses(PsiMethodCallExpression expression) {
