@@ -71,14 +71,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
         super.visitMethodCallExpression(expression);
 
-        System.out.println("EXXPR: " + expression.getText());
-        System.out.println("EXPR PARE:" + expression.getParent().getText());
-        String parentString = expression.getText() + ";";
-        System.out.println(parentString.equals(expression.getParent().getText()));
-        System.out.println(expression.getParent().toString());
-
-
-        if (expression.getMethodExpression().getType() == null && parentString.equals(expression.getParent().getText())) {
+        if (!parentUses(expression)) {
             String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .dropWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining()).substring(1);
             String containingClassString = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
@@ -102,12 +95,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
                     }
                 } else {
                     for (Method candidate : containingClass.getDeclaredMethods()) {
-                        if (candidate.getName().equals(methodName)) {
-                            System.out.println(candidate.getName());
-                            System.out.println(candidate.getReturnType().getName());
-                            System.out.println(expression.getParent().getText());
-                            System.out.println(expression.getParent().getParent().getText());
-                        }
                         if (candidate.getName().equals(methodName) && !candidate.getReturnType().getName().equals("void") && !candidate.getReturnType().getName().equals("boolean")) {
                             int offset = expression.getTextOffset();
                             errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE).onOffset(offset));
@@ -121,6 +108,11 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
 
         }
+    }
+
+    private boolean parentUses(PsiMethodCallExpression expression) {
+        String parentString = expression.getText() + ";";
+        return !parentString.equals(expression.getParent().getText());
     }
 
     private String fullyQualifiedNameOf(PsiType type) {
