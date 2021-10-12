@@ -24,22 +24,17 @@ public class Analyser extends JavaRecursiveElementVisitor {
     }
 
     @Override
-    public void visitImportList(PsiImportList list) {
-        System.out.println(list.getText());
-    }
-
-    @Override
     public void visitIfStatement(PsiIfStatement statement) {
         super.visitIfStatement(statement);
 
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
             int offset = statement.getTextOffset();
-            this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF).onOffset(offset));
+            this.errors.add(new Error().type(ErrorType.SEMICOLON_AFTER_IF).onOffset(offset).causedBy(statement.getText()));
         }
         String conditionalText = statement.getCondition().getText();
         if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
             int offset = statement.getTextOffset();
-            this.errors.add(new Error().type(ErrorType.BITWISE_OPERATOR).onOffset(offset));
+            this.errors.add(new Error().type(ErrorType.BITWISE_OPERATOR).onOffset(offset).causedBy(statement.getCondition().getText()));
         }
     }
 

@@ -298,4 +298,80 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getErrorType());
     }
 
+    @Test
+    public void ignoringReturnValueWhenCallingRemoveOnArrayList() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "import java.util.ArrayList;" +
+                        "public class Test { " +
+                            "public void method() {" +
+                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "ints.remove(0);" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
+        Assertions.assertEquals( 1, accepter.getAnalyser().getErrors().size());
+        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
+    }
+
+    @Test
+    public void notIgnoringReturnValueWhenCallingOnArrayList() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "import java.util.ArrayList;" +
+                        "public class Test { " +
+                            "public void method() {" +
+                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "ints.sort(Comparator.naturalOrder());" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Assertions.assertTrue( accepter.getAnalyser().getErrors().isEmpty());
+    }
+
+    @Test
+    public void shouldGetOriginalCodeForSemicolonAfterIfError() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (true); {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Error error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
+        Assertions.assertEquals("if (true);", error.getCodeThatCausedTheError());
+    }
+
+    @Test
+    public void shouldGetOriginalCodeForBitwiseOperationError() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (true | false) {" +
+                                    "System.out.println(\"Helo\")" +
+                                "}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Error error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, error.getErrorType());
+        Assertions.assertEquals("true | false", error.getCodeThatCausedTheError());
+    }
+
 }
