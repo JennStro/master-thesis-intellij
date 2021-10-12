@@ -413,4 +413,21 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, errors.get(0).getErrorType());
     }
 
+    @Test
+    public void systemOutPrintShouldNotBeChecked() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "System.out.println()" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        Assertions.assertEquals(0, errors.size());
+    }
+
 }

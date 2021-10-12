@@ -71,7 +71,11 @@ public class Analyser extends JavaRecursiveElementVisitor {
     @Override
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
 
-        if (expression.getText().contains(".") && !parentUses(expression)) {
+        boolean isSystemCall = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
+                .takeWhile(it -> it != '(').map(Object::toString).collect(Collectors.joining()).equals("System.out.println");
+        boolean containsDot = expression.getText().contains(".");
+
+        if (!isSystemCall && containsDot && !parentUses(expression)) {
             String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .dropWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining()).substring(1);
             String containingClassString = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
