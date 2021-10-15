@@ -186,7 +186,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                 "public class Test { " +
                             "public void method() {" +
-                                "String myString = \"Hello\";" +
+                                "java.lang.String myString = \"Hello\";" +
                                 "myString.toUpperCase();" +
                              "}" +
                         "}");
@@ -220,10 +220,9 @@ public class AnalyserTest extends BasePlatformTestCase {
     @Test
     public void ignoringReturnValueWhenCallingArrayListMethod() {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
-                "import java.util.ArrayList;" +
                         "public class Test { " +
                             "public void method() {" +
-                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "java.util.ArrayList<Integer> ints = new ArrayList();" +
                                 "ints.toString();" +
                             "}" +
                         "}");
@@ -261,8 +260,8 @@ public class AnalyserTest extends BasePlatformTestCase {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                 "public class Test { " +
                             "public void method() {" +
-                                "String myString = \"Hello\";" +
-                                "String myString2 = \"Hello\";" +
+                                "java.lang.String myString = \"Hello\";" +
+                                "java.lang.String myString2 = \"Hello\";" +
                                 "myString2.toUpperCase();" +
                                 "if (myString.charAt(0) == myString2.charAt(0)); {}" +
                             "}" +
@@ -283,8 +282,8 @@ public class AnalyserTest extends BasePlatformTestCase {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                 "public class Test { " +
                             "public void method() {" +
-                                "String myString = \"Hello\";" +
-                                "String myString2 = \"Hello\";" +
+                                "java.lang.String myString = \"Hello\";" +
+                                "java.lang.String myString2 = \"Hello\";" +
                                 "myString2.concat(myString);" +
                             "}" +
                         "}");
@@ -301,10 +300,9 @@ public class AnalyserTest extends BasePlatformTestCase {
     @Test
     public void ignoringReturnValueWhenCallingRemoveOnArrayList() {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
-                "import java.util.ArrayList;" +
                         "public class Test { " +
                             "public void method() {" +
-                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "java.util.ArrayList<Integer> ints = new ArrayList();" +
                                 "ints.remove(0);" +
                             "}" +
                         "}");
@@ -430,4 +428,45 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals(0, errors.size());
     }
 
+    @Test
+    public void shouldGetExplanationForSemicolonIfError() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
+                "public class Test { " +
+                            "public void method() {" +
+                                "if (true); {}" +
+                            "}" +
+                        "}");
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Error error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
+        Assertions.assertEquals("A semicolon should not be after if statement!", error.getExplanation());
+    }
+
+    @Test
+    public void shouldGetErrorWhenIgnoringReturnValueInsideIfStatement() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test", Programs.IGNORING_RETURN_VALUE_INSIDE_IF_STATEMENT);
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Error error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, error.getErrorType());
+    }
+
+    @Test
+    public void shouldGetErrorWhenIgnoringReturnValueInsideIfStatementExampleProgram() {
+        MockPSIFile mockPSIFile = new MockPSIFile(this, "test", Programs.EXAMPLE_PROGRAM_SIMPLE_APP);
+        ApplicationManager.getApplication().runReadAction(mockPSIFile);
+        PsiJavaFile file = mockPSIFile.getFile();
+        Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
+        Accepter accepter = new Accepter(file, analyser);
+        ApplicationManager.getApplication().runReadAction(accepter);
+        Error error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, error.getErrorType());
+    }
 }

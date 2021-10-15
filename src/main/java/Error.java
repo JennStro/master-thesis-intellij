@@ -3,6 +3,7 @@ public class Error {
     private int offset = -1;
     private ErrorType errorType;
     private String codeThatHasCausedTheError;
+    private String explanation;
 
     public int getOffset() {
         return offset;
@@ -35,6 +36,11 @@ public class Error {
         return this;
     }
 
+    public Error withExplanation(String explanation) {
+        this.explanation = explanation;
+        return this;
+    }
+
     public String toString() {
         return "HasError: " + errorType + " " + " On line: " + offset;
     }
@@ -43,4 +49,7 @@ public class Error {
         return this.codeThatHasCausedTheError;
     }
 
+    public String getExplanation() {
+        return this.explanation;
+    }
 }

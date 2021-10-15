@@ -61,11 +61,18 @@ public class Main extends AnAction {
                 file.accept(this.analyser);
 
                 for (Error error : this.analyser.getErrors()) {
-                    Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType(), "", Messages.getInformationIcon());
-
                     if (error.getOffset() != -1) {
                         int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
-                        Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType() + " On line " + lineNumber, "", Messages.getInformationIcon());
+                        Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType() + " On line " + lineNumber + " Caused by " + error.getCodeThatCausedTheError() + " " + error.getExplanation() , "", Messages.getInformationIcon());
+                        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                        CaretModel caretModel = editor.getCaretModel();
+                        caretModel.moveToLogicalPosition(new LogicalPosition(lineNumber, 0));
+                        ScrollingModel scrollingModel = editor.getScrollingModel();
+                        scrollingModel.scrollToCaret(ScrollType.CENTER);
+                        editor.getSelectionModel().selectLineAtCaret();
+                        editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+                    } else {
+                        Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType() + " Caused by " + error.getCodeThatCausedTheError(), "", Messages.getInformationIcon());
                     }
                 }
             }
