@@ -1,3 +1,6 @@
+import com.intellij.execution.filters.TextConsoleBuilderFactory;
+import com.intellij.execution.ui.ConsoleView;
+import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
@@ -8,8 +11,11 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.*;
 import com.intellij.ui.JBColor;
+import com.intellij.ui.content.Content;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -43,6 +49,7 @@ public class Main extends AnAction {
         if(projectIsOpen(project)) {
             FileEditorManager manager = FileEditorManager.getInstance(project);
             VirtualFile[] files = manager.getSelectedFiles();
+
             for (VirtualFile file : files) {
                     PsiJavaFile parsedFile = (PsiJavaFile) PsiManager.getInstance(project).findFile(file);
                     parsedFiles.add(parsedFile);
@@ -63,7 +70,6 @@ public class Main extends AnAction {
                 for (Error error : this.analyser.getErrors()) {
                     if (error.getOffset() != -1) {
                         int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
-                        Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType() + " On line " + lineNumber + " Caused by " + error.getCodeThatCausedTheError() + " " + error.getExplanation() , "", Messages.getInformationIcon());
                         Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                         CaretModel caretModel = editor.getCaretModel();
                         caretModel.moveToLogicalPosition(new LogicalPosition(lineNumber, 0));
@@ -71,8 +77,15 @@ public class Main extends AnAction {
                         scrollingModel.scrollToCaret(ScrollType.CENTER);
                         editor.getSelectionModel().selectLineAtCaret();
                         editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+                        // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
+                        ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
+                        ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
+                        Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
+                        toolWindow.getContentManager().addContent(content);
+                        toolWindow.activate(null);
+                        consoleView.print("Hello from MyPlugin!", ConsoleViewContentType.NORMAL_OUTPUT);
                     } else {
-                        Messages.showMessageDialog(project, "OPS: found error! " + error.getErrorType() + " Caused by " + error.getCodeThatCausedTheError(), "", Messages.getInformationIcon());
+
                     }
                 }
             }
