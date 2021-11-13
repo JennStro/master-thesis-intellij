@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.ArrayList;
 import master.thesis.Formatter;
-import master.thesis.errors.BitwiseOperator;
+import master.thesis.errors.Error;
 
 public class Main extends AnAction {
 
@@ -86,15 +86,13 @@ public class Main extends AnAction {
                     Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
                     toolWindow.getContentManager().addContent(content);
                     toolWindow.activate(null);
-                    consoleView.print(Formatter.exampleTextTemplate(BitwiseOperator.getExample()), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(Formatter.exampleTextTemplate(error.getExample()), ConsoleViewContentType.NORMAL_OUTPUT);
                 }
             }
         }
     }
 
     private void HandleError(Error error, Project project) {
-        Messages.showMessageDialog(project, "OPS: found error on line " + error.getOffset(), "An error: " + error.getErrorType(), Messages.getInformationIcon());
-
         Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
         CaretModel caretModel = editor.getCaretModel();
         caretModel.moveToLogicalPosition(new LogicalPosition(error.getOffset(), 0));

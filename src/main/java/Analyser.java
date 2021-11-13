@@ -3,6 +3,8 @@ import com.intellij.psi.*;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
+import master.thesis.errors.ErrorType;
+import master.thesis.errors.Error;
 
 public class Analyser extends JavaRecursiveElementVisitor {
 
@@ -27,20 +29,12 @@ public class Analyser extends JavaRecursiveElementVisitor {
     public void visitIfStatement(PsiIfStatement statement) {
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
             int offset = statement.getTextOffset();
-            this.errors.add(new Error()
-                    .type(ErrorType.SEMICOLON_AFTER_IF)
-                    .onOffset(offset)
-                    .causedBy(statement.getText())
-                    .withExplanation(Explanations.SEMICOLON_AFTER_IF));
+            this.errors.add(new Error(ErrorType.SEMICOLON_AFTER_IF, statement.getTextOffset(), statement.getTextLength()));
         }
         String conditionalText = statement.getCondition().getText();
         if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
             int offset = statement.getTextOffset();
-            this.errors.add(new Error()
-                    .type(ErrorType.BITWISE_OPERATOR)
-                    .onOffset(offset)
-                    .causedBy(statement.getCondition().getText())
-                    .withExplanation(Explanations.BITWISE_OPERATOR));
+            this.errors.add(new Error(ErrorType.BITWISE_OPERATOR, statement.getTextOffset(), statement.getTextLength()));
         }
         super.visitIfStatement(statement);
     }
@@ -51,12 +45,8 @@ public class Analyser extends JavaRecursiveElementVisitor {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
             if (bothExpressionsAreStrings(leftExpression, rightExpression)) {
-                int offset = expression.getTextOffset();
-                errors.add(new Error()
-                        .type(ErrorType.NOT_USING_EQUALS)
-                        .onOffset(offset)
-                        .causedBy(expression.getText())
-                        .withExplanation(Explanations.NOT_USING_EQUALS));
+                errors.add(new Error(ErrorType.NOT_USING_EQUALS, expression.getTextOffset(), expression.getTextLength()));
+
             }
         }
         super.visitBinaryExpression(expression);
@@ -117,8 +107,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
                         Method method = containingClass.getMethod(methodName, (Class<?>[]) null);
                         boolean methodReturnsVoid = method.getReturnType().getName().equals("void");
                         if (!methodReturnsVoid) {
-                            int offset = expression.getTextOffset();
-                            errors.add(new Error().type(ErrorType.IGNORING_RETURN_VALUE).onOffset(offset));
+                            errors.add(new Error(ErrorType.IGNORING_RETURN_VALUE, expression.getTextOffset(), expression.getTextLength()));
                         }
                     } catch (NoSuchMethodException e) {
                         e.printStackTrace();
@@ -127,11 +116,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
                     for (Method candidate : containingClass.getDeclaredMethods()) {
                         if (candidate.getName().equals(methodName) && !candidate.getReturnType().getName().equals("void") && !candidate.getReturnType().getName().equals("boolean")) {
                             int offset = expression.getTextOffset();
-                            errors.add(new Error()
-                                    .type(ErrorType.IGNORING_RETURN_VALUE)
-                                    .onOffset(offset)
-                                    .causedBy(expression.getText())
-                                    .withExplanation(Explanations.IGNORING_RETURN_VALUE));
+                            errors.add(new Error(ErrorType.IGNORING_RETURN_VALUE, expression.getTextOffset(), expression.getTextLength()));
                         }
                     }
                 }
