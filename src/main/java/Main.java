@@ -67,26 +67,23 @@ public class Main extends AnAction {
             for (PsiJavaFile file : files) {
                 file.accept(this.analyser);
 
-                for (Error error : this.analyser.getErrors()) {
-                    if (error.getOffset() != -1) {
-                        int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
-                        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                        CaretModel caretModel = editor.getCaretModel();
-                        caretModel.moveToLogicalPosition(new LogicalPosition(lineNumber, 0));
-                        ScrollingModel scrollingModel = editor.getScrollingModel();
-                        scrollingModel.scrollToCaret(ScrollType.CENTER);
-                        editor.getSelectionModel().selectLineAtCaret();
-                        editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
-                        // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
-                        ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
-                        ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
-                        Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
-                        toolWindow.getContentManager().addContent(content);
-                        toolWindow.activate(null);
-                        consoleView.print("Hello from MyPlugin!", ConsoleViewContentType.NORMAL_OUTPUT);
-                    } else {
-
-                    }
+                if (!this.analyser.getErrors().isEmpty()) {
+                    Error error = this.analyser.getErrors().get(0);
+                    int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
+                    Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                    CaretModel caretModel = editor.getCaretModel();
+                    caretModel.moveToLogicalPosition(new LogicalPosition(lineNumber, 0));
+                    ScrollingModel scrollingModel = editor.getScrollingModel();
+                    scrollingModel.scrollToCaret(ScrollType.CENTER);
+                    editor.getSelectionModel().selectLineAtCaret();
+                    editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+                    // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
+                    ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
+                    ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
+                    Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
+                    toolWindow.getContentManager().addContent(content);
+                    toolWindow.activate(null);
+                    consoleView.print(error.getExplanation(), ConsoleViewContentType.NORMAL_OUTPUT);
                 }
             }
         }

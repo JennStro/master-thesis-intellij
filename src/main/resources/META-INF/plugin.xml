@@ -14,14 +14,12 @@
     <depends>com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-            <!-- Add your extensions here -->
         <!-- From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window -->
             <toolWindow id="MyPlugin"
                         anchor="bottom"
-                        icon="iconfile.png"
+                        icon=""
                         factoryClass="toolwindow.MyToolWindowFactory">
             </toolWindow>
-        <!-- Add your extensions here -->
     </extensions>
     <actions>
         <action id="FindingSomeBugs" class="Main" text="Find bugs!" description="Find bugs!">
