@@ -13,6 +13,8 @@ repositories {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    implementation files('lib/master-thesis-formatter.jar')
+    implementation files('lib/master-thesis-errors.jar')
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

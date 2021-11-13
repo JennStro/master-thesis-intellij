@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.ArrayList;
+import master.thesis.Formatter;
+import master.thesis.errors.BitwiseOperator;
 
 public class Main extends AnAction {
 
@@ -84,7 +86,7 @@ public class Main extends AnAction {
                     Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
                     toolWindow.getContentManager().addContent(content);
                     toolWindow.activate(null);
-                    consoleView.print(error.getExplanation(), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(Formatter.exampleTextTemplate(BitwiseOperator.getExample()), ConsoleViewContentType.NORMAL_OUTPUT);
                 }
             }
         }
