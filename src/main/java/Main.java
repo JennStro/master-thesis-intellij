@@ -79,6 +79,7 @@ public class Main extends AnAction {
                     editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
                     // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
                     ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
+                    toolWindow.getContentManager().removeAllContents(true);
                     ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
                     Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
                     toolWindow.getContentManager().addContent(content);
