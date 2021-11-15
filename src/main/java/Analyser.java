@@ -63,25 +63,9 @@ public class Analyser extends JavaRecursiveElementVisitor {
         return expression.getOperationSign().getTokenType().equals(JavaTokenType.EQEQ);
     }
 
-    private boolean bothExpressionsAreStrings(PsiExpression left, PsiExpression right) {
-        if (left != null && right != null && left.getType() != null && right.getType() != null) {
-            return left.getType().equalsToText(getTypeOfString(left)) && right.getType().equalsToText(getTypeOfString(right));
-        }
-        return false;
-    }
-
-    private String getTypeOfString(PsiExpression expr) {
-        if (expr instanceof PsiLiteralExpression) {
-            return "java.lang.String";
-        }
-        return "String";
-    }
-
     @Override
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
         super.visitMethodCallExpression(expression);
-
-        System.out.println("CALL: " + expression.getText());
 
         boolean isSystemCall = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                 .takeWhile(it -> it != '(').map(Object::toString).collect(Collectors.joining())
@@ -94,8 +78,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
             String nameOfObjectBeingCalledOn = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
                     .takeWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining());
 
-            System.out.println("Containing class: " + nameOfObjectBeingCalledOn);
-
             PsiType typeOfObjectBeingCalledOn = this.context.get(nameOfObjectBeingCalledOn);
             System.out.println(typeOfObjectBeingCalledOn);
             System.out.println(fullyQualifiedName);
@@ -103,8 +85,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
             String typeOfContainingClass = typeOfObjectBeingCalledOn
                     .getCanonicalText().chars().mapToObj(it -> (char) it)
                     .takeWhile(it -> it != '<')
-                    .map(Object::toString).collect(Collectors.joining());;
-            System.out.println(typeOfContainingClass);
+                    .map(Object::toString).collect(Collectors.joining());
 
             try {
                 Class<?> containingClass = Class.forName(typeOfContainingClass);
@@ -122,7 +103,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
                 } else {
                     for (Method candidate : containingClass.getDeclaredMethods()) {
                         if (candidate.getName().equals(methodName) && !candidate.getReturnType().getName().equals("void") && !candidate.getReturnType().getName().equals("boolean")) {
-                            int offset = expression.getTextOffset();
                             errors.add(new Error(ErrorType.IGNORING_RETURN_VALUE, expression.getTextOffset(), expression.getTextLength()));
                         }
                     }
@@ -139,23 +119,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
     private boolean parentUses(PsiMethodCallExpression expression) {
         String parentString = expression.getText() + ";";
         return !parentString.equals(expression.getParent().getText());
-    }
-
-    private String fullyQualifiedNameOf(PsiType type) {
-        String typeName = type.getCanonicalText();
-        System.out.println(typeName);
-        String typetypeMName = type.getCanonicalText()
-                .chars().mapToObj(it -> (char) it)
-                .takeWhile(it -> it != '<')
-                .map(Object::toString).collect(Collectors.joining());
-        System.out.println(typetypeMName);
-        System.out.println(this.fullyQualifiedName);
-        return this.fullyQualifiedName.get(
-                type.getCanonicalText()
-                .chars().mapToObj(it -> (char) it)
-                .takeWhile(it -> it != '<')
-                .map(Object::toString).collect(Collectors.joining())
-            );
     }
 
     private boolean hasBitwiseOperator(String text, char bitwiseOperator) {
