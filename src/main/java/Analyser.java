@@ -10,10 +10,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
     private ArrayList<Error> errors = new ArrayList<>();
     private HashMap<String, PsiType> context = new HashMap<>();
-    private HashMap<String, String> fullyQualifiedName = new HashMap<>(Map.of(
-            "ArrayList", "java.util.ArrayList",
-            "String", "java.lang.String"
-    ));
 
     public ArrayList<Error> getErrors() {
         return this.errors;
@@ -79,8 +75,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
                     .takeWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining());
 
             PsiType typeOfObjectBeingCalledOn = this.context.get(nameOfObjectBeingCalledOn);
-            System.out.println(typeOfObjectBeingCalledOn);
-            System.out.println(fullyQualifiedName);
 
             String typeOfContainingClass = typeOfObjectBeingCalledOn
                     .getCanonicalText().chars().mapToObj(it -> (char) it)
