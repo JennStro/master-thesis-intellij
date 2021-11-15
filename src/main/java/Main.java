@@ -101,9 +101,6 @@ public class Main extends AnAction {
         editor.getSelectionModel().selectLineAtCaret();
         editor.getMarkupModel().addLineHighlighter(error.getOffset() , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
 
-        //for (Integer line : error.getAffectedLines()) {
-        //    editor.getMarkupModel().addLineHighlighter(line , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
-        //}
         Messages.showMessageDialog(project, "Remove lines", "Errors", Messages.getInformationIcon());
         editor.getMarkupModel().removeAllHighlighters();
     }

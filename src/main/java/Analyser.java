@@ -28,12 +28,10 @@ public class Analyser extends JavaRecursiveElementVisitor {
     @Override
     public void visitIfStatement(PsiIfStatement statement) {
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
-            int offset = statement.getTextOffset();
             this.errors.add(new Error(ErrorType.SEMICOLON_AFTER_IF, statement.getTextOffset(), statement.getTextLength()));
         }
         String conditionalText = statement.getCondition().getText();
         if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
-            int offset = statement.getTextOffset();
             this.errors.add(new Error(ErrorType.BITWISE_OPERATOR, statement.getTextOffset(), statement.getTextLength()));
         }
         super.visitIfStatement(statement);
@@ -44,12 +42,21 @@ public class Analyser extends JavaRecursiveElementVisitor {
         if (usesDoubleEqualSign(expression)) {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
-            if (bothExpressionsAreStrings(leftExpression, rightExpression)) {
+            if (!isPrimitive(leftExpression.getType()) || rightExpression != null && !isPrimitive(rightExpression.getType())) {
                 errors.add(new Error(ErrorType.NOT_USING_EQUALS, expression.getTextOffset(), expression.getTextLength()));
-
             }
         }
         super.visitBinaryExpression(expression);
+    }
+
+    private boolean isPrimitive(PsiType type) {
+        return type != null &&
+                type.equalsToText("int") ||
+                type.equalsToText("float") ||
+                type.equalsToText("byte") ||
+                type.equalsToText("short") ||
+                type.equalsToText("boolean") ||
+                type.equalsToText("char");
     }
 
     private boolean usesDoubleEqualSign(PsiBinaryExpression expression) {
