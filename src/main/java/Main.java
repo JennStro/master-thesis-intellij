@@ -88,7 +88,8 @@ public class Main extends AnAction {
                     toolWindow.activate(null);
                     consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
                     consoleView.print(Formatter.formatShortExplanationMessage(error.getOffset(),error.getWhat(), error.getWhy()), ConsoleViewContentType.NORMAL_OUTPUT);
-                    consoleView.print(Formatter.formatExampleText(error.getExample()), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(Formatter.textWithNewLineCharactersInBox("EXAMPLE: How to not do it",error.getExampleOnHowToNotDoIt(), Formatter.width), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(Formatter.textWithNewLineCharactersInBox("EXAMPLE: How to do it",error.getExampleOnHowToDoIt(), Formatter.width), ConsoleViewContentType.NORMAL_OUTPUT);
                 }
             }
         }
