@@ -46,13 +46,14 @@ public class Analyser extends JavaRecursiveElementVisitor {
     }
 
     private boolean isPrimitive(PsiType type) {
-        return type != null &&
+        return type != null && (
                 type.equalsToText("int") ||
-                type.equalsToText("float") ||
                 type.equalsToText("byte") ||
                 type.equalsToText("short") ||
                 type.equalsToText("boolean") ||
-                type.equalsToText("char");
+                type.equalsToText("char") ||
+                type.equalsToText("float"))
+                ;
     }
 
     private boolean usesDoubleEqualSign(PsiBinaryExpression expression) {
@@ -108,6 +109,14 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
 
         }
+    }
+
+    private PsiType getReturnTypeFrom(PsiMethodCallExpression expression) {
+        PsiMethod method = expression.resolveMethod();
+        if (method != null) {
+            return method.getReturnType();
+        }
+        return null;
     }
 
     private boolean parentUses(PsiMethodCallExpression expression) {

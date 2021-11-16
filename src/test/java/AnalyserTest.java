@@ -274,6 +274,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
         ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        System.out.println(errors);
         Assertions.assertEquals(2, errors.size());
         Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getType());
         Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, errors.get(1).getType());
@@ -335,7 +336,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertTrue( accepter.getAnalyser().getErrors().isEmpty());
     }
-    
+
     @Test
     public void callingLocalMethod() {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
