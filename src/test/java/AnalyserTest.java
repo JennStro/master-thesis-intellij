@@ -64,7 +64,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0));
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
     @Test
@@ -204,12 +204,13 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
+
     @Test
     public void ignoringReturnValueButCallingOnOftenUsedAsVoidMethod() {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                 "public class Test { " +
                             "public void method() {" +
-                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "java.util.ArrayList<Integer> ints = new java.util.ArrayList();" +
                                 "ints.add(1);" +
                             "}" +
                         "}");
@@ -226,7 +227,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                         "public class Test { " +
                             "public void method() {" +
-                                "java.util.ArrayList<Integer> ints = new ArrayList();" +
+                                "java.util.ArrayList<Integer> ints = new java.util.ArrayList();" +
                                 "ints.toString();" +
                             "}" +
                         "}");
@@ -307,7 +308,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         MockPSIFile mockPSIFile = new MockPSIFile(this, "test",
                         "public class Test { " +
                             "public void method() {" +
-                                "java.util.ArrayList<Integer> ints = new ArrayList();" +
+                                "java.util.ArrayList<Integer> ints = new java.util.ArrayList();" +
                                 "ints.remove(0);" +
                             "}" +
                         "}");
@@ -327,7 +328,7 @@ public class AnalyserTest extends BasePlatformTestCase {
                 "import java.util.ArrayList;" +
                         "public class Test { " +
                             "public void method() {" +
-                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "java.util.ArrayList<Integer> ints = new java.util.ArrayList();" +
                                 "ints.sort(Comparator.naturalOrder());" +
                             "}" +
                         "}");
@@ -345,7 +346,7 @@ public class AnalyserTest extends BasePlatformTestCase {
                 "import java.util.ArrayList;" +
                         "public class Test { " +
                             "public void method() {" +
-                                "ArrayList<Integer> ints = new ArrayList();" +
+                                "java.util.ArrayList<Integer> ints = new java.util.ArrayList();" +
                             "}" +
 
                             "public void methodCaller() {" +
@@ -410,7 +411,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         ApplicationManager.getApplication().runReadAction(accepter);
         BaseError error = accepter.getAnalyser().getErrors().get(0);
         Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
-        Assertions.assertEquals("A semicolon should not be after if statement!", error.getShortExplanation());
+        Assertions.assertEquals("You have a semicolon (;) after an if-statement.", error.getShortExplanation());
     }
 
     @Test
@@ -433,7 +434,10 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        BaseError error = accepter.getAnalyser().getErrors().get(0);
-        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, error.getErrorType());
+        ArrayList<BaseError> errors = accepter.getAnalyser().getErrors();
+        System.out.println(errors);
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, errors.get(0).getErrorType());
+        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, errors.get(1).getErrorType());
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(2).getErrorType());
     }
 }
