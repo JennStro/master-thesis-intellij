@@ -38,10 +38,12 @@ public class Analyser extends JavaRecursiveElementVisitor {
         if (usesDoubleEqualSign(expression)) {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
-            if (!isPrimitive(leftExpression.getType()) || rightExpression != null && !isPrimitive(rightExpression.getType())) {
-                errors.add(new EqualsOperatorError(expression.getTextOffset(), expression.getTextLength()));
+            // Tests do not resolve method return type, returns null.
+            if (leftExpression.getType() != null && rightExpression != null && rightExpression.getType() != null) {
+                if (!isPrimitive(leftExpression.getType()) || !isPrimitive(rightExpression.getType()))
+                    errors.add(new EqualsOperatorError(expression.getTextOffset(), expression.getTextLength()));
+                }
             }
-        }
         super.visitBinaryExpression(expression);
     }
 
