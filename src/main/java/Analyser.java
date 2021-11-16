@@ -3,15 +3,15 @@ import com.intellij.psi.*;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
-import master.thesis.errors.ErrorType;
-import master.thesis.errors.Error;
+
+import master.thesis.errors.*;
 
 public class Analyser extends JavaRecursiveElementVisitor {
 
-    private ArrayList<Error> errors = new ArrayList<>();
+    private ArrayList<BaseError> errors = new ArrayList<>();
     private HashMap<String, PsiType> context = new HashMap<>();
 
-    public ArrayList<Error> getErrors() {
+    public ArrayList<BaseError> getErrors() {
         return this.errors;
     }
 
@@ -24,11 +24,11 @@ public class Analyser extends JavaRecursiveElementVisitor {
     @Override
     public void visitIfStatement(PsiIfStatement statement) {
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
-            this.errors.add(new Error(ErrorType.SEMICOLON_AFTER_IF, statement.getTextOffset(), statement.getTextLength()));
+            this.errors.add(new SemiColonAfterIfError(statement.getTextOffset(), statement.getTextLength()));
         }
         String conditionalText = statement.getCondition().getText();
         if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
-            this.errors.add(new Error(ErrorType.BITWISE_OPERATOR, statement.getTextOffset(), statement.getTextLength()));
+            this.errors.add(new BitwiseOperatorError(statement.getTextOffset(), statement.getTextLength()));
         }
         super.visitIfStatement(statement);
     }
@@ -39,7 +39,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
             PsiExpression leftExpression = expression.getLOperand();
             PsiExpression rightExpression = expression.getROperand();
             if (!isPrimitive(leftExpression.getType()) || rightExpression != null && !isPrimitive(rightExpression.getType())) {
-                errors.add(new Error(ErrorType.NOT_USING_EQUALS, expression.getTextOffset(), expression.getTextLength()));
+                errors.add(new EqualsOperatorError(expression.getTextOffset(), expression.getTextLength()));
             }
         }
         super.visitBinaryExpression(expression);
@@ -90,7 +90,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
                         Method method = containingClass.getMethod(methodName, (Class<?>[]) null);
                         boolean methodReturnsVoid = method.getReturnType().getName().equals("void");
                         if (!methodReturnsVoid) {
-                            errors.add(new Error(ErrorType.IGNORING_RETURN_VALUE, expression.getTextOffset(), expression.getTextLength()));
+                            errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
                         }
                     } catch (NoSuchMethodException e) {
                         e.printStackTrace();
@@ -98,7 +98,7 @@ public class Analyser extends JavaRecursiveElementVisitor {
                 } else {
                     for (Method candidate : containingClass.getDeclaredMethods()) {
                         if (candidate.getName().equals(methodName) && !candidate.getReturnType().getName().equals("void") && !candidate.getReturnType().getName().equals("boolean")) {
-                            errors.add(new Error(ErrorType.IGNORING_RETURN_VALUE, expression.getTextOffset(), expression.getTextLength()));
+                            errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
                         }
                     }
                 }

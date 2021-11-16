@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.ArrayList;
 import master.thesis.Formatter;
-import master.thesis.errors.Error;
+import master.thesis.errors.BaseError;
 
 public class Main extends AnAction {
 
@@ -70,7 +70,7 @@ public class Main extends AnAction {
                 file.accept(this.analyser);
 
                 if (!this.analyser.getErrors().isEmpty()) {
-                    Error error = this.analyser.getErrors().get(0);
+                    BaseError error = this.analyser.getErrors().get(0);
                     int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
                     Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     CaretModel caretModel = editor.getCaretModel();
@@ -92,7 +92,7 @@ public class Main extends AnAction {
         }
     }
 
-    private void HandleError(Error error, Project project) {
+    private void HandleError(BaseError error, Project project) {
         Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
         CaretModel caretModel = editor.getCaretModel();
         caretModel.moveToLogicalPosition(new LogicalPosition(error.getOffset(), 0));

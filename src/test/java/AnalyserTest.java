@@ -5,12 +5,14 @@ import com.intellij.psi.PsiJavaFile;
 import com.intellij.testFramework.IdeaTestUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.util.lang.JavaVersion;
+import master.thesis.errors.BaseError;
+import master.thesis.errors.ErrorType;
 import org.junit.jupiter.api.*;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
 import java.util.ArrayList;
-import master.thesis.errors.Error;
-import master.thesis.errors.ErrorType;
+
+
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AnalyserTest extends BasePlatformTestCase {
@@ -62,7 +64,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0).getType());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0));
     }
 
     @Test
@@ -94,7 +96,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(0).getType());
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
     @Test
@@ -110,7 +112,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(0).getType());
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
     @Test
@@ -127,8 +129,8 @@ public class AnalyserTest extends BasePlatformTestCase {
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertEquals(2, accepter.getAnalyser().getErrors().size());
-        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0).getType());
-        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(1).getType());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, accepter.getAnalyser().getErrors().get(0).getErrorType());
+        Assertions.assertEquals(ErrorType.BITWISE_OPERATOR, accepter.getAnalyser().getErrors().get(1).getErrorType());
     }
 
     @Test
@@ -163,7 +165,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
-        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, accepter.getAnalyser().getErrors().get(0).getType());
+        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
     @Test
@@ -199,7 +201,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
         Assertions.assertEquals( 1, accepter.getAnalyser().getErrors().size());
-        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getType());
+        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
     @Test
@@ -235,7 +237,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
         Assertions.assertEquals( 1, accepter.getAnalyser().getErrors().size());
-        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getType());
+        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
     @Test
@@ -273,11 +275,11 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        ArrayList<BaseError> errors = accepter.getAnalyser().getErrors();
         System.out.println(errors);
         Assertions.assertEquals(2, errors.size());
-        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getType());
-        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, errors.get(1).getType());
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getErrorType());
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, errors.get(1).getErrorType());
     }
 
     @Test
@@ -295,9 +297,9 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        ArrayList<BaseError> errors = accepter.getAnalyser().getErrors();
         Assertions.assertEquals(1, errors.size());
-        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getType());
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, errors.get(0).getErrorType());
     }
 
     @Test
@@ -316,7 +318,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         ApplicationManager.getApplication().runReadAction(accepter);
         Assertions.assertFalse( accepter.getAnalyser().getErrors().isEmpty());
         Assertions.assertEquals( 1, accepter.getAnalyser().getErrors().size());
-        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getType());
+        Assertions.assertEquals( ErrorType.IGNORING_RETURN_VALUE, accepter.getAnalyser().getErrors().get(0).getErrorType());
     }
 
     @Test
@@ -371,9 +373,9 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        ArrayList<BaseError> errors = accepter.getAnalyser().getErrors();
         Assertions.assertEquals(1, errors.size());
-        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, errors.get(0).getType());
+        Assertions.assertEquals(ErrorType.NOT_USING_EQUALS, errors.get(0).getErrorType());
     }
 
     @Test
@@ -389,7 +391,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        ArrayList<Error> errors = accepter.getAnalyser().getErrors();
+        ArrayList<BaseError> errors = accepter.getAnalyser().getErrors();
         Assertions.assertEquals(0, errors.size());
     }
 
@@ -406,8 +408,8 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        Error error = accepter.getAnalyser().getErrors().get(0);
-        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getType());
+        BaseError error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.SEMICOLON_AFTER_IF, error.getErrorType());
         Assertions.assertEquals("A semicolon should not be after if statement!", error.getShortExplanation());
     }
 
@@ -419,8 +421,8 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        Error error = accepter.getAnalyser().getErrors().get(0);
-        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, error.getType());
+        BaseError error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, error.getErrorType());
     }
 
     @Test
@@ -431,7 +433,7 @@ public class AnalyserTest extends BasePlatformTestCase {
         Assertions.assertEquals("Java", file.getLanguage().getDisplayName());
         Accepter accepter = new Accepter(file, analyser);
         ApplicationManager.getApplication().runReadAction(accepter);
-        Error error = accepter.getAnalyser().getErrors().get(0);
-        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, error.getType());
+        BaseError error = accepter.getAnalyser().getErrors().get(0);
+        Assertions.assertEquals(ErrorType.IGNORING_RETURN_VALUE, error.getErrorType());
     }
 }
