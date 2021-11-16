@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.ArrayList;
-import master.thesis.Formatter;
+import master.thesis.formatter.Formatter;
 import master.thesis.errors.BaseError;
 
 public class Main extends AnAction {
@@ -86,7 +86,9 @@ public class Main extends AnAction {
                     Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
                     toolWindow.getContentManager().addContent(content);
                     toolWindow.activate(null);
-                    consoleView.print(Formatter.exampleTextTemplate(error.getExample()), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(Formatter.formatShortExplanationMessage(error.getOffset(),error.getWhat(), error.getWhy()), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(Formatter.formatExampleText(error.getExample()), ConsoleViewContentType.NORMAL_OUTPUT);
                 }
             }
         }
