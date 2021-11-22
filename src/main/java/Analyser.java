@@ -78,16 +78,22 @@ public class Analyser extends JavaRecursiveElementVisitor {
             if(!resolvedMethod.getReturnType().equalsToText("void")) {
                 errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
             }
-
         }
-    }
 
-    private PsiType getReturnTypeFrom(PsiMethodCallExpression expression) {
-        PsiMethod method = expression.resolveMethod();
-        if (method != null) {
-            return method.getReturnType();
+        PsiMethod resolvedMethod = expression.resolveMethod();
+        System.out.println(resolvedMethod.getModifierList());
+
+        System.out.println(resolvedMethod.getModifierList().hasModifierProperty(PsiModifier.STATIC));
+        if (resolvedMethod.getModifierList().hasModifierProperty(PsiModifier.STATIC)) {
+            System.out.println(resolvedMethod.getName());
+            System.out.println(expression.getMethodExpression().getText());
+            System.out.println(resolvedMethod.getContainingClass().getName());
+            System.out.println(expression.getMethodExpression().getQualifierExpression().getText());
+
+            if (!resolvedMethod.getContainingClass().getName().equals(expression.getMethodExpression().getQualifierExpression().getText())) {
+                errors.add(new StaticAsNormalError(expression.getTextOffset(), expression.getTextLength()));
+            }
         }
-        return null;
     }
 
     private boolean parentUses(PsiMethodCallExpression expression) {
