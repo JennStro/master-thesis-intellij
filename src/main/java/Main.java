@@ -86,10 +86,24 @@ public class Main extends AnAction {
                     Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
                     toolWindow.getContentManager().addContent(content);
                     toolWindow.activate(null);
-                    consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
-                    consoleView.print(Formatter.formatShortExplanationMessage(error.getOffset(),error.getWhat(), error.getWhy()), ConsoleViewContentType.NORMAL_OUTPUT);
-                    consoleView.print(Formatter.textWithNewLineCharactersInBox("EXAMPLE: How to not do it",error.getExampleOnHowToNotDoIt(), Formatter.width), ConsoleViewContentType.NORMAL_OUTPUT);
-                    consoleView.print(Formatter.textWithNewLineCharactersInBox("EXAMPLE: How to do it",error.getExampleOnHowToDoIt(), Formatter.width), ConsoleViewContentType.NORMAL_OUTPUT);
+                    //consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print(
+                            Formatter.sideBySide(
+                                    Formatter.formatShortExplanationMessage(error.getOffset(),error.getWhat(), error.getWhy()),
+                                    Formatter.sideBySide(
+                                            Formatter.textWithSurroundedBox("EXAMPLE: How to not do it",error.getExampleOnHowToNotDoIt()),
+                                            Formatter.textWithSurroundedBox("EXAMPLE: How to do it",error.getExampleOnHowToDoIt())
+                                    )
+                            ), ConsoleViewContentType.NORMAL_OUTPUT);
+                } else {
+                    ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
+                    toolWindow.getContentManager().removeAllContents(true);
+                    ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
+                    Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
+                    toolWindow.getContentManager().addContent(content);
+                    toolWindow.activate(null);
+                    //consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
+                    consoleView.print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
                 }
             }
         }

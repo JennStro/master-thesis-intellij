@@ -72,43 +72,12 @@ public class Analyser extends JavaRecursiveElementVisitor {
         boolean containsDot = expression.getText().contains(".");
 
         if (!isSystemCall && containsDot && !parentUses(expression)) {
-            String methodName = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
-                    .dropWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining()).substring(1);
-            String nameOfObjectBeingCalledOn = expression.getMethodExpression().getText().chars().mapToObj(it -> (char) it)
-                    .takeWhile(it -> it != '.').map(Object::toString).collect(Collectors.joining());
+            PsiMethod resolvedMethod = expression.resolveMethod();
+            System.out.println(resolvedMethod.getReturnType());
 
-            PsiType typeOfObjectBeingCalledOn = this.context.get(nameOfObjectBeingCalledOn);
-
-            String typeOfContainingClass = typeOfObjectBeingCalledOn
-                    .getCanonicalText().chars().mapToObj(it -> (char) it)
-                    .takeWhile(it -> it != '<')
-                    .map(Object::toString).collect(Collectors.joining());
-
-            try {
-                Class<?> containingClass = Class.forName(typeOfContainingClass);
-
-                if (expression.getArgumentList().isEmpty()) {
-                    try {
-                        Method method = containingClass.getMethod(methodName, (Class<?>[]) null);
-                        boolean methodReturnsVoid = method.getReturnType().getName().equals("void");
-                        if (!methodReturnsVoid) {
-                            errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
-                        }
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    for (Method candidate : containingClass.getDeclaredMethods()) {
-                        if (candidate.getName().equals(methodName) && !candidate.getReturnType().getName().equals("void") && !candidate.getReturnType().getName().equals("boolean")) {
-                            errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
-                        }
-                    }
-                }
-
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            if(!resolvedMethod.getReturnType().equalsToText("void")) {
+                errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
             }
-
 
         }
     }
