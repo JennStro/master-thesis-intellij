@@ -71,25 +71,14 @@ public class Analyser extends JavaRecursiveElementVisitor {
                 .equals("System.out.println");
         boolean containsDot = expression.getText().contains(".");
 
-        if (!isSystemCall && containsDot && !parentUses(expression)) {
-            PsiMethod resolvedMethod = expression.resolveMethod();
-            System.out.println(resolvedMethod.getReturnType());
+        PsiMethod resolvedMethod = expression.resolveMethod();
 
+        if (!isSystemCall && containsDot && !parentUses(expression)) {
             if(!resolvedMethod.getReturnType().equalsToText("void")) {
                 errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
             }
         }
-
-        PsiMethod resolvedMethod = expression.resolveMethod();
-        System.out.println(resolvedMethod.getModifierList());
-
-        System.out.println(resolvedMethod.getModifierList().hasModifierProperty(PsiModifier.STATIC));
         if (resolvedMethod.getModifierList().hasModifierProperty(PsiModifier.STATIC)) {
-            System.out.println(resolvedMethod.getName());
-            System.out.println(expression.getMethodExpression().getText());
-            System.out.println(resolvedMethod.getContainingClass().getName());
-            System.out.println(expression.getMethodExpression().getQualifierExpression().getText());
-
             if (!resolvedMethod.getContainingClass().getName().equals(expression.getMethodExpression().getQualifierExpression().getText())) {
                 errors.add(new StaticAsNormalError(expression.getTextOffset(), expression.getTextLength()));
             }
