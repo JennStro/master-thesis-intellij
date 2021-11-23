@@ -1,6 +1,5 @@
 import com.intellij.psi.*;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,10 +25,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
         if (statement.getThenBranch() instanceof PsiEmptyStatement) {
             this.errors.add(new SemiColonAfterIfError(statement.getTextOffset(), statement.getTextLength()));
         }
-        String conditionalText = statement.getCondition().getText();
-        if (hasBitwiseOperator(conditionalText, '|') || hasBitwiseOperator(conditionalText, '&')) {
-            this.errors.add(new BitwiseOperatorError(statement.getTextOffset(), statement.getTextLength()));
-        }
         super.visitIfStatement(statement);
     }
 
@@ -40,10 +35,25 @@ public class Analyser extends JavaRecursiveElementVisitor {
             PsiExpression rightExpression = expression.getROperand();
             // Tests do not resolve method return type, returns null.
             if (leftExpression.getType() != null && rightExpression != null && rightExpression.getType() != null) {
-                if (!isPrimitive(leftExpression.getType()) || !isPrimitive(rightExpression.getType()))
-                    errors.add(new EqualsOperatorError(expression.getTextOffset(), expression.getTextLength()));
+                if (!isPrimitive(leftExpression.getType()) || !isPrimitive(rightExpression.getType())) {
+                    EqualsOperatorError error = new EqualsOperatorError(expression.getTextOffset(), expression.getTextLength());
+                    error.setObjectOne(leftExpression.getText());
+                    error.setObjectTwo(rightExpression.getText());
+                    errors.add(error);
+                }
                 }
             }
+        if (usesBitwiseOperator(expression)) {
+            PsiExpression leftExpression = expression.getLOperand();
+            PsiExpression rightExpression = expression.getROperand();
+            if (leftExpression.getType().equalsToText("boolean") && rightExpression.getType().equalsToText("boolean")) {
+                BitwiseOperatorError error = new BitwiseOperatorError(expression.getTextOffset(), expression.getTextLength());
+                error.setLeftOperand(leftExpression.getText());
+                error.setOperator(expression.getOperationSign().getText());
+                error.setRightOperand(rightExpression.getText());
+                errors.add(error);
+            }
+        }
         super.visitBinaryExpression(expression);
     }
 
@@ -62,6 +72,10 @@ public class Analyser extends JavaRecursiveElementVisitor {
         return expression.getOperationSign().getTokenType().equals(JavaTokenType.EQEQ);
     }
 
+    private boolean usesBitwiseOperator(PsiBinaryExpression expression) {
+        return expression.getOperationSign().getTokenType().equals(JavaTokenType.AND) || expression.getOperationSign().getTokenType().equals(JavaTokenType.OR);
+    }
+
     @Override
     public void visitMethodCallExpression(PsiMethodCallExpression expression) {
         super.visitMethodCallExpression(expression);
@@ -75,12 +89,18 @@ public class Analyser extends JavaRecursiveElementVisitor {
 
         if (!isSystemCall && containsDot && !parentUses(expression)) {
             if(!resolvedMethod.getReturnType().equalsToText("void")) {
-                errors.add(new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength()));
+                IgnoringReturnError error = new IgnoringReturnError(expression.getTextOffset(), expression.getTextLength());
+                error.setReturnType(resolvedMethod.getReturnType().getPresentableText());
+                error.setMethodCall(expression.getText());
+                errors.add(error);
             }
         }
         if (resolvedMethod.getModifierList().hasModifierProperty(PsiModifier.STATIC)) {
             if (!resolvedMethod.getContainingClass().getName().equals(expression.getMethodExpression().getQualifierExpression().getText())) {
-                errors.add(new StaticAsNormalError(expression.getTextOffset(), expression.getTextLength()));
+                StaticAsNormalError error = new StaticAsNormalError(expression.getTextOffset(), expression.getTextLength());
+                //error.setContainingClass(resolvedMethod.getContainingClass().getName());
+                //error.setMethodCall(expression.getText());
+                errors.add(error);
             }
         }
     }
@@ -88,15 +108,6 @@ public class Analyser extends JavaRecursiveElementVisitor {
     private boolean parentUses(PsiMethodCallExpression expression) {
         String parentString = expression.getText() + ";";
         return !parentString.equals(expression.getParent().getText());
-    }
-
-    private boolean hasBitwiseOperator(String text, char bitwiseOperator) {
-        int firstOperator = text.indexOf(bitwiseOperator);
-        if (textContains(firstOperator)) {
-            int secondOperator = text.substring(firstOperator+1).indexOf(bitwiseOperator);
-            return !textContains(secondOperator);
-        }
-        return false;
     }
 
     private boolean textContains(int operatorIndex) {

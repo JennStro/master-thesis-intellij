@@ -100,6 +100,13 @@ public class Main extends AnAction {
                                             Formatter.textWithSurroundedBox("EXAMPLE: How to do it",error.getExampleOnHowToDoIt())
                                     )
                             ), ConsoleViewContentType.NORMAL_OUTPUT);
+                    if (error.hasSuggestion()) {
+                        System.out.print("Has sugg");
+                        consoleView.print(
+                                Formatter.textWithSurroundedBox("SUGGESTION", error.getSuggestion()),
+                                ConsoleViewContentType.NORMAL_OUTPUT
+                        );
+                    }
                 } else {
                     editor.getMarkupModel().removeAllHighlighters();
                     ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
