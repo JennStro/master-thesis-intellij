@@ -32,7 +32,6 @@ public class Main extends AnAction {
 
     @Override
     public void update(@NotNull AnActionEvent event) {
-        System.out.println("Updated");
         Project project = event.getProject();
         Presentation presentation = event.getPresentation();
         if (!projectIsOpen(project)) {
@@ -41,7 +40,6 @@ public class Main extends AnAction {
         }
         presentation.setEnabledAndVisible(true);
         this.analyser = new Analyser();
-        System.out.println("Enabled");
     }
 
     private boolean projectIsOpen(Project project) {
@@ -87,9 +85,9 @@ public class Main extends AnAction {
                         Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
                         toolWindow.getContentManager().addContent(content);
                         toolWindow.activate(null);
-                        consoleView.print(error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
-                        if (error.hasSuggestion()) {
-                            consoleView.print(error.getSuggestion(), ConsoleViewContentType.NORMAL_OUTPUT);
+                        consoleView.print("In file " + file.getName() + ", in class " + report.getClassName() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
+                        if (error.getSuggestion().isPresent()) {
+                            consoleView.print(error.getSuggestion().get(), ConsoleViewContentType.NORMAL_OUTPUT);
                         }
                     } else {
                         editor.getMarkupModel().removeAllHighlighters();
