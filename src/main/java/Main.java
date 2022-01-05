@@ -16,13 +16,15 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.*;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.content.Content;
+import master.thesis.backend.errors.BaseError;
+import master.thesis.backend.errors.BugReport;
+import master.thesis.backend.analyser.Analyser;
 import org.jetbrains.annotations.NotNull;
 
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
-import master.thesis.formatter.Formatter;
-import master.thesis.errors.BaseError;
 
 public class Main extends AnAction {
 
@@ -46,92 +48,62 @@ public class Main extends AnAction {
         return project != null;
     }
 
-    private ArrayList<PsiJavaFile> getParsedFiles(Project project) {
-        ArrayList<PsiJavaFile> parsedFiles = new ArrayList<>();
-        if(projectIsOpen(project)) {
-            FileEditorManager manager = FileEditorManager.getInstance(project);
-            VirtualFile[] files = manager.getSelectedFiles();
-
-            for (VirtualFile file : files) {
-                    PsiJavaFile parsedFile = (PsiJavaFile) PsiManager.getInstance(project).findFile(file);
-                    parsedFiles.add(parsedFile);
-            }
-        }
-        return parsedFiles;
-    }
-
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         Project project = e.getProject();
-        if(project != null) {
-            ArrayList<PsiJavaFile> files = getParsedFiles(project);
+        if (project != null) {
+            if (projectIsOpen(project)) {
+                FileEditorManager manager = FileEditorManager.getInstance(project);
+                VirtualFile[] files = manager.getSelectedFiles();
 
-            for (PsiJavaFile file : files) {
-                file.accept(this.analyser);
-
-                Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-
-                if (!this.analyser.getErrors().isEmpty()) {
-                    BaseError error = this.analyser.getErrors().get(0);
-                    int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
-
-                    editor.getMarkupModel().removeAllHighlighters();
-                    CaretModel caretModel = editor.getCaretModel();
-                    caretModel.moveToLogicalPosition(new LogicalPosition(lineNumber, 0));
-                    ScrollingModel scrollingModel = editor.getScrollingModel();
-                    scrollingModel.scrollToCaret(ScrollType.CENTER);
-                    editor.getSelectionModel().selectLineAtCaret();
-                    editor.getSelectionModel().setSelection(error.getOffset(), error.getOffset() + error.getLength());
-                    //editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
-
-                    // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
-                    ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
-                    toolWindow.getContentManager().removeAllContents(true);
-                    ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
-                    Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
-                    toolWindow.getContentManager().addContent(content);
-                    toolWindow.activate(null);
-                    //consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
-                    consoleView.print(
-                            Formatter.sideBySide(
-                                    Formatter.formatShortExplanationMessage(lineNumber+1,error.getWhat(), error.getWhy()),
-                                    Formatter.sideBySide(
-                                            Formatter.textWithSurroundedBox("EXAMPLE: How to not do it",error.getExampleOnHowToNotDoIt()),
-                                            Formatter.textWithSurroundedBox("EXAMPLE: How to do it",error.getExampleOnHowToDoIt())
-                                    )
-                            ), ConsoleViewContentType.NORMAL_OUTPUT);
-                    if (error.hasSuggestion()) {
-                        System.out.print("Has sugg");
-                        consoleView.print(
-                                Formatter.textWithSurroundedBox("SUGGESTION", error.getSuggestion()),
-                                ConsoleViewContentType.NORMAL_OUTPUT
-                        );
+                for (VirtualFile file : files) {
+                    String filecontent = "";
+                    try {
+                        filecontent = new String(file.getInputStream().readAllBytes());
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
                     }
-                } else {
-                    editor.getMarkupModel().removeAllHighlighters();
-                    ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
-                    toolWindow.getContentManager().removeAllContents(true);
-                    ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
-                    Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
-                    toolWindow.getContentManager().addContent(content);
-                    toolWindow.activate(null);
-                    //consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
-                    consoleView.print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
+
+                    BugReport report = new Analyser().analyse(filecontent);
+                    Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+
+                    if (!report.getBugs().isEmpty()) {
+                        BaseError error = report.getBugs().get(0);
+                        //int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
+
+                        editor.getMarkupModel().removeAllHighlighters();
+                        CaretModel caretModel = editor.getCaretModel();
+                        // caretModel.moveToLogicalPosition(new LogicalPosition(lineNumber, 0));
+                        ScrollingModel scrollingModel = editor.getScrollingModel();
+                        scrollingModel.scrollToCaret(ScrollType.CENTER);
+                        editor.getSelectionModel().selectLineAtCaret();
+                        editor.getSelectionModel().setSelection(error.getOffset(), error.getOffset() + error.getLength());
+                        //editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
+
+                        // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
+                        ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
+                        toolWindow.getContentManager().removeAllContents(true);
+                        ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
+                        Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
+                        toolWindow.getContentManager().addContent(content);
+                        toolWindow.activate(null);
+                        consoleView.print(error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
+                        if (error.hasSuggestion()) {
+                            consoleView.print(error.getSuggestion(), ConsoleViewContentType.NORMAL_OUTPUT);
+                        }
+                    } else {
+                        editor.getMarkupModel().removeAllHighlighters();
+                        ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
+                        toolWindow.getContentManager().removeAllContents(true);
+                        ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
+                        Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
+                        toolWindow.getContentManager().addContent(content);
+                        toolWindow.activate(null);
+                        //consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
+                        consoleView.print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
+                    }
                 }
             }
         }
-    }
-
-    private void HandleError(BaseError error, Project project) {
-        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-        CaretModel caretModel = editor.getCaretModel();
-        caretModel.moveToLogicalPosition(new LogicalPosition(error.getOffset(), 0));
-        ScrollingModel scrollingModel = editor.getScrollingModel();
-        scrollingModel.scrollToCaret(ScrollType.CENTER);
-        editor.getSelectionModel().selectLineAtCaret();
-        editor.getMarkupModel().addLineHighlighter(error.getOffset() , HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
-
-        Messages.showMessageDialog(project, "Remove lines", "Errors", Messages.getInformationIcon());
-        editor.getMarkupModel().removeAllHighlighters();
     }
 }
