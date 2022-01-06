@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>org.example.master</id>
+    <id>master.thesis.plugin</id>
     <name>master.thesis.intellij.plugin</name>
     <vendor email="Jenny.Strommen@student.uib.no" url="https://jennstro.github.io/">Jenny Strommen</vendor>
 
