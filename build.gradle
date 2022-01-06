@@ -13,7 +13,7 @@ repositories {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-    implementation files('lib/master-thesis-backend-analyser.jar')
+    implementation files('lib/master-thesis-backend-analyser-1.1.0.jar')
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
@@ -22,9 +22,7 @@ intellij {
     plugins = ['com.intellij.java']
 }
 patchPluginXml {
-    changeNotes = """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
+    changeNotes = """"""
 }
 test {
     useJUnitPlatform()

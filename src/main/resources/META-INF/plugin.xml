@@ -1,11 +1,10 @@
 <idea-plugin>
     <id>org.example.master</id>
     <name>master.thesis.intellij.plugin</name>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <vendor email="Jenny.Strommen@student.uib.no" url="https://jennstro.github.io/">Jenny Strommen</vendor>
 
     <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
+    This is a plugin for IntelliJ, developed as a part of a master thesis.
     ]]></description>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
@@ -15,7 +14,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window -->
-            <toolWindow id="MyPlugin"
+            <toolWindow id="Master thesis plugin"
                         anchor="bottom"
                         icon=""
                         factoryClass="toolwindow.MyToolWindowFactory">

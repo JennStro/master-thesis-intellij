@@ -4,31 +4,22 @@ import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
-import com.intellij.openapi.editor.*;
-import com.intellij.openapi.editor.markup.HighlighterLayer;
-import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.psi.*;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.content.Content;
+import com.intellij.ui.content.ContentManager;
 import master.thesis.backend.errors.BaseError;
 import master.thesis.backend.errors.BugReport;
 import master.thesis.backend.analyser.Analyser;
 import org.jetbrains.annotations.NotNull;
 
-
-import java.awt.*;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Optional;
 
 public class Main extends AnAction {
-
-    private Analyser analyser;
 
     @Override
     public void update(@NotNull AnActionEvent event) {
@@ -39,11 +30,26 @@ public class Main extends AnAction {
             return;
         }
         presentation.setEnabledAndVisible(true);
-        this.analyser = new Analyser();
     }
 
     private boolean projectIsOpen(Project project) {
         return project != null;
+    }
+
+    private Optional<ConsoleView> getConsole(AnActionEvent e) {
+        // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
+        String consoleName = "Master thesis plugin";
+        ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow(consoleName);
+        if (toolWindow != null) {
+            ContentManager toolWindowContentManager = toolWindow.getContentManager();
+            toolWindowContentManager.removeAllContents(true);
+            ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
+            Content content = toolWindowContentManager.getFactory().createContent(consoleView.getComponent(), consoleName, false);
+            toolWindowContentManager.addContent(content);
+            toolWindow.activate(null);
+            return Optional.of(consoleView);
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -63,43 +69,21 @@ public class Main extends AnAction {
                     }
 
                     BugReport report = new Analyser().analyse(filecontent);
-                    Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
 
-                    if (!report.getBugs().isEmpty()) {
-                        BaseError error = report.getBugs().get(0);
-                        //int lineNumber = PsiDocumentManager.getInstance(project).getDocument(file).getLineNumber(error.getOffset());
 
-                        editor.getMarkupModel().removeAllHighlighters();
-                        CaretModel caretModel = editor.getCaretModel();
-                        // caretModel.moveToLogicalPosition(new LogicalPosition(lineNumber, 0));
-                        ScrollingModel scrollingModel = editor.getScrollingModel();
-                        scrollingModel.scrollToCaret(ScrollType.CENTER);
-                        editor.getSelectionModel().selectLineAtCaret();
-                        editor.getSelectionModel().setSelection(error.getOffset(), error.getOffset() + error.getLength());
-                        //editor.getMarkupModel().addLineHighlighter(lineNumber, HighlighterLayer.FIRST, new TextAttributes(null, JBColor.YELLOW.darker(), null, null, Font.BOLD));
-
-                        // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
-                        ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
-                        toolWindow.getContentManager().removeAllContents(true);
-                        ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
-                        Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
-                        toolWindow.getContentManager().addContent(content);
-                        toolWindow.activate(null);
-                        consoleView.print("In file " + file.getName() + ", in class " + report.getClassName() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
-                        if (error.getSuggestion().isPresent()) {
-                            consoleView.print(error.getSuggestion().get(), ConsoleViewContentType.NORMAL_OUTPUT);
+                    Optional<ConsoleView> console = getConsole(e);
+                    if (console.isPresent()) {
+                        if (!report.getBugs().isEmpty()) {
+                            BaseError error = report.getBugs().get(0);
+                            console.get().print("In file " + file.getName() + ", on line " + error.getLineNumber() + ", in class " + error.getContainingClass() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
+                            if (error.getSuggestion().isPresent()) {
+                                console.get().print("\n"+error.getSuggestion().get(), ConsoleViewContentType.NORMAL_OUTPUT);
+                            }
+                        } else {
+                            console.get().print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
                         }
-                    } else {
-                        editor.getMarkupModel().removeAllHighlighters();
-                        ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow("MyPlugin");
-                        toolWindow.getContentManager().removeAllContents(true);
-                        ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(e.getProject()).getConsole();
-                        Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "MyPlugin Output", false);
-                        toolWindow.getContentManager().addContent(content);
-                        toolWindow.activate(null);
-                        //consoleView.print(Formatter.infoMessage(master.thesis.formatter.Editor.INTELLIJ), ConsoleViewContentType.NORMAL_OUTPUT);
-                        consoleView.print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
                     }
+
                 }
             }
         }
