@@ -75,7 +75,11 @@ public class Main extends AnAction {
                     if (console.isPresent()) {
                         if (!report.getBugs().isEmpty()) {
                             BaseError error = report.getBugs().get(0);
-                            console.get().print("In file " + file.getName() + ", on line " + error.getLineNumber() + ", in class " + error.getContainingClass() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
+                            if (error.getLineNumber() != -1) {
+                                console.get().print("In file " + file.getName() + ", on line " + error.getLineNumber() + ", in class " + error.getContainingClass() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
+                            } else {
+                                console.get().print("In file " + file.getName() + ", in class " + error.getContainingClass() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
+                            }
                             if (error.getSuggestion().isPresent()) {
                                 console.get().print("\n"+error.getSuggestion().get(), ConsoleViewContentType.NORMAL_OUTPUT);
                             }
