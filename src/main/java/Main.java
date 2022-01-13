@@ -11,12 +11,14 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
-import master.thesis.backend.errors.BaseError;
-import master.thesis.backend.errors.BugReport;
-import master.thesis.backend.analyser.Analyser;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Optional;
 
 public class Main extends AnAction {
@@ -61,31 +63,44 @@ public class Main extends AnAction {
                 VirtualFile[] files = manager.getSelectedFiles();
 
                 for (VirtualFile file : files) {
-                    String filecontent = "";
+
                     try {
-                        filecontent = new String(file.getInputStream().readAllBytes());
+                        URL url = new URL("https://master-thesis-web-backend-prod.herokuapp.com/analyse");
+                        URLConnection con = url.openConnection();
+                        HttpURLConnection http = (HttpURLConnection) con;
+                        http.setRequestMethod("POST");
+                        http.setDoOutput(true);
+                        http.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
+                        http.connect();
+
+                        try(OutputStream os = http.getOutputStream()) {
+                            os.write(file.getInputStream().readAllBytes());
+                        }
+                        String response = new String(http.getInputStream().readAllBytes());
+                        JSONObject obj = new JSONObject(response);
+
+                        Optional<ConsoleView> console = getConsole(e);
+
+                        if (console.isPresent()) {
+                            if (obj.get("status").equals("errors")) {
+                                String result = "In class " + obj.getString("containingClass");
+                                if (obj.getInt("lineNumber") != -1) {
+                                    result += ", on line number " + obj.get("lineNumber") + "\n";
+                                }
+                                result += obj.getString("explanation");
+                                if (obj.has("suggestion")) {
+                                    result += obj.getString("suggestion");
+                                }
+                                console.get().print(result, ConsoleViewContentType.NORMAL_OUTPUT);
+                            } else {
+                                console.get().print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
+                            }
+                        }
+
+
+
                     } catch (IOException ex) {
                         ex.printStackTrace();
-                    }
-
-                    BugReport report = new Analyser().analyse(filecontent);
-
-
-                    Optional<ConsoleView> console = getConsole(e);
-                    if (console.isPresent()) {
-                        if (!report.getBugs().isEmpty()) {
-                            BaseError error = report.getBugs().get(0);
-                            if (error.getLineNumber() != -1) {
-                                console.get().print("In file " + file.getName() + ", on line " + error.getLineNumber() + ", in class " + error.getContainingClass() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
-                            } else {
-                                console.get().print("In file " + file.getName() + ", in class " + error.getContainingClass() + ": \n" + error.getWhat(), ConsoleViewContentType.NORMAL_OUTPUT);
-                            }
-                            if (error.getSuggestion().isPresent()) {
-                                console.get().print("\n"+error.getSuggestion().get(), ConsoleViewContentType.NORMAL_OUTPUT);
-                            }
-                        } else {
-                            console.get().print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
-                        }
                     }
 
                 }
