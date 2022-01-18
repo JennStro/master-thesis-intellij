@@ -85,11 +85,17 @@ public class Main extends AnAction {
                             if (obj.get("status").equals("errors")) {
                                 String result = "In class " + obj.getString("containingClass");
                                 if (obj.getInt("lineNumber") != -1) {
-                                    result += ", on line number " + obj.get("lineNumber") + "\n";
+                                    result += ", on line number " + obj.get("lineNumber");
                                 }
-                                result += obj.getString("explanation");
+                                result += "\n\n" + obj.getString("explanation");
                                 if (obj.has("suggestion")) {
-                                    result += obj.getString("suggestion");
+                                    result += "\n \nYou should try \n" + obj.getString("suggestion");
+                                }
+                                if (obj.has("moreInfoLink")) {
+                                    result += "\n\nMore info? Check out "+ obj.get("moreInfoLink");
+                                }
+                                if (obj.has("tip")) {
+                                    result += "\n\n" + obj.get("tip");
                                 }
                                 console.get().print(result, ConsoleViewContentType.NORMAL_OUTPUT);
                             } else {
