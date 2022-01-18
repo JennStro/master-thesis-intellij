@@ -82,24 +82,29 @@ public class Main extends AnAction {
                         Optional<ConsoleView> console = getConsole(e);
 
                         if (console.isPresent()) {
-                            if (obj.get("status").equals("errors")) {
-                                String result = "In class " + obj.getString("containingClass");
-                                if (obj.getInt("lineNumber") != -1) {
-                                    result += ", on line number " + obj.get("lineNumber");
-                                }
-                                result += "\n\n" + obj.getString("explanation");
-                                if (obj.has("suggestion")) {
-                                    result += "\n \nYou should try \n" + obj.getString("suggestion");
-                                }
-                                if (obj.has("moreInfoLink")) {
-                                    result += "\n\nMore info? Check out "+ obj.get("moreInfoLink");
-                                }
-                                if (obj.has("tip")) {
-                                    result += "\n\n" + obj.get("tip");
-                                }
+                            if (obj.has("hasException") && obj.getBoolean("hasException")) {
+                                String result = "Uh oh, could not analyse your code! :(";
                                 console.get().print(result, ConsoleViewContentType.NORMAL_OUTPUT);
                             } else {
-                                console.get().print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
+                                if (obj.get("status").equals("errors")) {
+                                    String result = "In class " + obj.getString("containingClass");
+                                    if (obj.getInt("lineNumber") != -1) {
+                                        result += ", on line number " + obj.get("lineNumber");
+                                    }
+                                    result += "\n\n" + obj.getString("explanation");
+                                    if (obj.has("suggestion")) {
+                                        result += "\n \nYou should try \n" + obj.getString("suggestion");
+                                    }
+                                    if (obj.has("moreInfoLink")) {
+                                        result += "\n\nMore info? Check out " + obj.get("moreInfoLink");
+                                    }
+                                    if (obj.has("tip")) {
+                                        result += "\n\n" + obj.get("tip");
+                                    }
+                                    console.get().print(result, ConsoleViewContentType.NORMAL_OUTPUT);
+                                } else {
+                                    console.get().print("No errors found!", ConsoleViewContentType.NORMAL_OUTPUT);
+                                }
                             }
                         }
 
