@@ -1,3 +1,6 @@
+### :star: 0.1.0
+New feature: Add link and tip when available
+
 ### :bug: 0.0.1 
 Bug: fix negative linenumber
 
