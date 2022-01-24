@@ -40,6 +40,7 @@ public class Main extends AnAction {
 
     private Optional<ConsoleView> getConsole(AnActionEvent e) {
         // From https://stackoverflow.com/questions/51972122/intellij-plugin-development-print-in-console-window
+        // and https://plugins.jetbrains.com/docs/intellij/tool-windows.html
         String consoleName = "Master thesis plugin";
         ToolWindow toolWindow = ToolWindowManager.getInstance(e.getProject()).getToolWindow(consoleName);
         if (toolWindow != null) {
@@ -66,8 +67,7 @@ public class Main extends AnAction {
 
                     try {
                         URL url = new URL("https://master-thesis-web-backend-prod.herokuapp.com/analyse");
-                        URLConnection con = url.openConnection();
-                        HttpURLConnection http = (HttpURLConnection) con;
+                        HttpURLConnection http = (HttpURLConnection) url.openConnection();
                         http.setRequestMethod("POST");
                         http.setDoOutput(true);
                         http.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
@@ -82,8 +82,8 @@ public class Main extends AnAction {
                         Optional<ConsoleView> console = getConsole(e);
 
                         if (console.isPresent()) {
-                            if (obj.has("hasException") && obj.getBoolean("hasException")) {
-                                String result = "Uh oh, could not analyse your code! :(";
+                            if (obj.has("hasException")) {
+                                String result = obj.getString("hasException");
                                 console.get().print(result, ConsoleViewContentType.NORMAL_OUTPUT);
                             } else {
                                 if (obj.get("status").equals("errors")) {
