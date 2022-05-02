@@ -11,6 +11,9 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
+import master.thesis.backend.analyser.Analyser;
+import master.thesis.backend.errors.BaseError;
+import master.thesis.backend.errors.BugReport;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -66,40 +69,32 @@ public class Main extends AnAction {
                 for (VirtualFile file : files) {
 
                     try {
-                        URL url = new URL("https://master-thesis-web-backend-prod.herokuapp.com/analyse");
-                        HttpURLConnection http = (HttpURLConnection) url.openConnection();
-                        http.setRequestMethod("POST");
-                        http.setDoOutput(true);
-                        http.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
-                        http.connect();
-
-                        try(OutputStream os = http.getOutputStream()) {
-                            os.write(file.getInputStream().readAllBytes());
-                        }
-                        String response = new String(http.getInputStream().readAllBytes());
-                        JSONObject obj = new JSONObject(response);
+                        Analyser analyser = new Analyser();
+                        String contentOfFile = new String(file.getInputStream().readAllBytes());
+                        BugReport report = analyser.analyse(contentOfFile);
 
                         Optional<ConsoleView> console = getConsole(e);
 
                         if (console.isPresent()) {
-                            if (obj.has("hasException")) {
-                                String result = obj.getString("hasException");
+                            if (report.getException().isPresent()) {
+                                String result = report.getException().get().toString();
                                 console.get().print(result, ConsoleViewContentType.NORMAL_OUTPUT);
                             } else {
-                                if (obj.get("status").equals("errors")) {
-                                    String result = "In class " + obj.getString("containingClass");
-                                    if (obj.getInt("lineNumber") != -1) {
-                                        result += ", on line number " + obj.get("lineNumber");
+                                if (!report.getBugs().isEmpty()) {
+                                    BaseError bug = report.getBugs().get(0);
+                                    String result = "In class " + bug.getContainingClass();
+                                    if (bug.getLineNumber() != -1) {
+                                        result += ", on line number " + bug.getLineNumber();
                                     }
-                                    result += "\n\n" + obj.getString("explanation");
-                                    if (obj.has("suggestion")) {
-                                        result += "\n \nYou should try \n" + obj.getString("suggestion");
+                                    result += "\n\n" + bug.getCauseOfError();
+                                    if (bug.getSuggestion().isPresent()) {
+                                        result += "\n \nYou should try \n" + bug.getSuggestion().get();
                                     }
-                                    if (obj.has("moreInfoLink")) {
-                                        result += "\n\nMore info? Check out " + obj.get("moreInfoLink");
+                                    if (bug.getMoreInfoLink().isPresent()) {
+                                        result += "\n\nMore info? Check out " + bug.getMoreInfoLink().get();
                                     }
-                                    if (obj.has("tip")) {
-                                        result += "\n\n" + obj.get("tip");
+                                    if (bug.getTip().isPresent()) {
+                                        result += "\n\n" + bug.getTip().get();
                                     }
                                     console.get().print(result, ConsoleViewContentType.NORMAL_OUTPUT);
                                 } else {

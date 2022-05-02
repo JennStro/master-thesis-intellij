@@ -8,6 +8,9 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://repo.repsy.io/mvn/jennstro/master-thesis-analyser"
+    }
 }
 
 dependencies {
@@ -15,6 +18,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
     // https://mvnrepository.com/artifact/org.json/json
     implementation 'org.json:json:20211205'
+    implementation 'master.thesis.backend.analyser:master-thesis-backend-analyser:4.2.2'
 
 }
 
