@@ -1,6 +1,7 @@
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
@@ -9,19 +10,17 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.psi.search.FileTypeIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
 import master.thesis.backend.analyser.Analyser;
 import master.thesis.backend.errors.BaseError;
 import master.thesis.backend.errors.BugReport;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+import java.util.Collection;
 import java.util.Optional;
 
 public class Main extends AnAction {
@@ -64,14 +63,27 @@ public class Main extends AnAction {
         if (project != null) {
             if (projectIsOpen(project)) {
                 FileEditorManager manager = FileEditorManager.getInstance(project);
-                VirtualFile[] files = manager.getSelectedFiles();
+                Collection<VirtualFile> projectFiles = FileTypeIndex.getFiles(JavaFileType.INSTANCE, GlobalSearchScope.projectScope(project));
+                VirtualFile[] selectedFiles = manager.getSelectedFiles();
 
-                for (VirtualFile file : files) {
+                Analyser analyser = new Analyser();
+
+                for (VirtualFile projectFile : projectFiles) {
+                    try {
+                        String content = new String(projectFile.getInputStream().readAllBytes());
+                        System.out.println(content);
+                        analyser.addDependency(content);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+                for (VirtualFile file : selectedFiles) {
 
                     try {
-                        Analyser analyser = new Analyser();
-                        String contentOfFile = new String(file.getInputStream().readAllBytes());
-                        BugReport report = analyser.analyse(contentOfFile);
+
+                        String contentOfFileToAnalyse = new String(file.getInputStream().readAllBytes());
+                        BugReport report = analyser.analyse(contentOfFileToAnalyse);
 
                         Optional<ConsoleView> console = getConsole(e);
 
