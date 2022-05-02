@@ -71,7 +71,6 @@ public class Main extends AnAction {
                 for (VirtualFile projectFile : projectFiles) {
                     try {
                         String content = new String(projectFile.getInputStream().readAllBytes());
-                        System.out.println(content);
                         analyser.addDependency(content);
                     } catch (IOException ex) {
                         ex.printStackTrace();
