@@ -63,21 +63,11 @@ public class Main extends AnAction {
         if (project != null) {
             if (projectIsOpen(project)) {
                 FileEditorManager manager = FileEditorManager.getInstance(project);
-                Collection<VirtualFile> projectFiles = FileTypeIndex.getFiles(JavaFileType.INSTANCE, GlobalSearchScope.projectScope(project));
                 VirtualFile[] selectedFiles = manager.getSelectedFiles();
 
-                Analyser analyser = new Analyser();
-
-                for (VirtualFile projectFile : projectFiles) {
-                    try {
-                        String content = new String(projectFile.getInputStream().readAllBytes());
-                        analyser.addDependency(content);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-
-                for (VirtualFile file : selectedFiles) {
+                if (selectedFiles.length != 0) {
+                    VirtualFile file = selectedFiles[0];
+                    Analyser analyser = new Analyser();
 
                     try {
 
@@ -120,6 +110,9 @@ public class Main extends AnAction {
                         ex.printStackTrace();
                     }
 
+                } else {
+                    Optional<ConsoleView> console = getConsole(e);
+                    console.ifPresent(consoleView -> consoleView.print("Found no file to analyse.", ConsoleViewContentType.NORMAL_OUTPUT));
                 }
             }
         }

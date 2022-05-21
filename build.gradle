@@ -1,10 +1,10 @@
 plugins {
-    id 'org.jetbrains.intellij' version '1.2.0'
+    id 'org.jetbrains.intellij' version '1.5.2'
     id 'java'
 }
 
 group 'master.thesis.intellij.plugin'
-version '0.2.0'
+version '1.0.0'
 
 repositories {
     mavenCentral()
@@ -18,13 +18,12 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
     // https://mvnrepository.com/artifact/org.json/json
     implementation 'org.json:json:20211205'
-    implementation 'master.thesis.backend.analyser:master-thesis-backend-analyser:4.2.2'
-
+    implementation 'master.thesis.backend.analyser:master-thesis-backend-analyser:5.0.0'
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version = '2021.3.1'
+    version = '2022.1.1'
     plugins = ['com.intellij.java']
 }
 patchPluginXml {
