@@ -1,3 +1,6 @@
+### :star: 1.1.0
+Feature: Ignore false case of integer division
+
 ### :fire: 1.0.0 
 Breaking: Remove support for adding dependencies for analysis due to unstable feature. 
 Bug: Analyse selected file when split window
