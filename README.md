@@ -2,6 +2,10 @@
 
 Download: https://jennstro.github.io/
 
+This plugin uses Uncoil-core: https://github.com/JennStro/master-thesis-backend-analyser to analyse Java code for errors. 
+
+The plugin is based on https://plugins.jetbrains.com/docs/intellij/documentation.html
+
 ## Demo 
 
 
